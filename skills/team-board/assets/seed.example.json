@@ -1,0 +1,16 @@
+{
+  "writes": [
+    { "op": "set", "collection": "meta", "doc_id": "system",
+      "data": { "line": "12:00 GREEN  load5=1.2  avail=9G  disk=70%" } },
+    { "op": "set", "collection": "agents", "doc_id": "po",
+      "data": { "role": "Product Owner", "model": "main session", "state": "working", "task": "Planning", "order": 1 } },
+    { "op": "set", "collection": "plans", "doc_id": "first-plan",
+      "data": { "title": "First plan", "lead": "BE Lead", "status": "In progress", "next": "Review" } },
+    { "op": "set", "collection": "log", "doc_id": "0900-po",
+      "data": { "at": "2026-01-15T09:00:00+07:00", "agent": "product-owner", "task": "Setup", "did": "Started the team", "decided": "" } },
+    { "op": "set", "collection": "questions", "doc_id": "first-question",
+      "data": { "session": "Team setup", "from": "Product Owner", "title": "Example question: which option?",
+                "context": "One or two lines of background.", "recommendation": "Option A, because it is simpler",
+                "options": ["Option A", "Option B"], "status": "open", "createdAt": "2026-01-15T09:01:00+07:00" } }
+  ]
+}

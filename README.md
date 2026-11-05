@@ -38,6 +38,6 @@ Without Claude: `.team/init.sh` asks in the terminal, and `.team/init.sh --yes` 
 | `roles/` | Role definitions |
 | `templates/` | Brief, design review, plan-complete, work report, skill |
 | `tools/` | `capacity-check.sh` |
-| `skills/` | Generic skills |
+| `skills/` | Generic skills: `md-guide-to-html`, `team-board` |
 
 No secrets, internal hosts or project details belong here.

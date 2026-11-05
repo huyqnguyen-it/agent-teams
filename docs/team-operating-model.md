@@ -145,7 +145,7 @@ Every agent appends to `team/log/YYMMDD.md` before stopping, using `.team/templa
 
 ## 9. Talking to the owner
 
-The PO keeps one board (`boardUrl`), reads it at every step, and only asks real decisions, each with a recommendation. Push notifications are for blockers only.
+The PO keeps one board (`boardUrl`, created with the `team-board` skill), reads it at every step, and only asks real decisions, each with a recommendation. Push notifications are for blockers only.
 
 ## 10. Scripts before agents
 
