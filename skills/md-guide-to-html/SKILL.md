@@ -11,15 +11,15 @@ The `.md` stays the source. The HTML is generated, so never edit it by hand: edi
 
 - Side menu grouped by purpose, with the current section marked.
 - Search across all sections and table rows.
-- "Required variables only" filter for tables with a `Required` column; required rows are marked.
+- "Required variables only" filter for tables with a `Required` column; a row is required when the cell starts with `yes` (any case), anything else is optional.
 - Checklist with a progress bar on one section's table, saved in the reader's browser.
 - Copy button on code blocks. ASCII diagrams stay as they are.
 - Light and dark mode, phone layout, print layout. It works offline: no CDN, no fonts to fetch.
 
 ## Steps
 
-1. Start from `assets/deployment-guide-template.md` for a deployment guide, or any Markdown with one `#` title, `##` sections and pipe tables. A blank line must come before each table.
-2. Copy `guide.config.example.json` beside the guide as `<guide>.config.json`, and list the menu groups. Without a config, all sections go in one group.
+1. Start from `assets/deployment-guide-template.md` for a deployment guide. For any other guide (runbook, reference), write Markdown with one `#` title, `##` sections and pipe tables; the section order below applies to deployment guides only. A blank line must come before each table. Sections like Revision are optional: a page without a Revision table simply has no Rev badge.
+2. Optional. Copy `guide.config.example.json` beside the guide as `<guide>.config.json`, then replace its groups with your own section headings (the example names deployment sections; `guide-check.py` reports any that are missing as `menu: no section`). Without a config, all sections go in one group.
 3. Check: `python3 .team/skills/md-guide-to-html/scripts/guide-check.py <guide>.md`. Fix everything it reports: a broken row shows under the wrong header in the HTML too.
 4. Build: `python3 .team/skills/md-guide-to-html/scripts/guide-md-to-html.py <guide>.md`. Needs Python `markdown`.
 5. Open the page once in a browser.
