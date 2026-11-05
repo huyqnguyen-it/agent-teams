@@ -33,7 +33,7 @@ git clone https://github.com/huyqnguyen-it/agent-teams.git .team
 | `docs/team-operating-model.md` | The rules |
 | `roles/` | Role definitions |
 | `templates/` | Brief, design review, plan-complete, work report, skill |
-| `tools/` | `hr-check.sh` |
+| `tools/` | `capacity-check.sh` |
 | `skills/` | Generic skills |
 
 No secrets, internal hosts or project details belong here.

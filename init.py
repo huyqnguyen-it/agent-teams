@@ -7,10 +7,10 @@ TPL = pathlib.Path(__file__).resolve().parent
 ROOT = pathlib.Path.cwd()
 TEAM = ROOT / 'team'
 YES = '--yes' in sys.argv
-OPTIONAL = ['designer', 'devops', 'fe-lead', 'be-lead']
-CORE = ['product-owner', 'hr']
-DESC = {'hr': 'HR: hire-or-reuse decisions and the capacity budget',
-        'designer': 'Software Designer: architecture, conventions, cross-boundary design review',
+OPTIONAL = ['architect', 'devops', 'fe-lead', 'be-lead']
+CORE = ['product-owner', 'resource-manager']
+DESC = {'resource-manager': 'Resource Manager: hire-or-reuse decisions and the capacity budget',
+        'architect': 'Architect: architecture, conventions, cross-boundary design review',
         'devops': 'DevOps: environments, running apps, resources for teams',
         'fe-lead': 'FE Lead: frontend tasks and decisions', 'be-lead': 'BE Lead: backend tasks and decisions'}
 
@@ -57,7 +57,7 @@ def main():
         if lead in roles:
             cur = ','.join(cfg['repos'].get(lead, []))
             cfg['repos'][lead] = [x.strip() for x in ask(f'Repositories for {lead}', cur).split(',') if x.strip()]
-    for role in roles + ['hr']:
+    for role in roles + ['resource-manager']:
         cfg['models'][role] = ask(f'Model for {role}', cfg['models'][role])
     if 'devops' in roles:
         cfg['devopsPermissions'] = ask('What may DevOps change?', cfg['devopsPermissions'])
@@ -119,7 +119,7 @@ def main():
         with claude.open('a') as f:
             f.write(f'\n## Agent team\n\nTeam rules: {note}\nTeam data: `team/`. The main session is the Product Owner.\n')
     print('Team ready. Roles:', ', '.join(cfg['roles']))
-    print(subprocess.run([str(TPL / 'tools' / 'hr-check.sh')], capture_output=True, text=True).stdout.strip())
+    print(subprocess.run([str(TPL / 'tools' / 'capacity-check.sh')], capture_output=True, text=True).stdout.strip())
 
 
 if __name__ == '__main__':

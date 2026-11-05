@@ -1,4 +1,4 @@
-# Software Designer
+# Architect
 
 - **Model:** {{model}}
 - **Does:** Architecture, folder structure, conventions, patterns, data design, design documents. Reviews every cross-boundary plan.

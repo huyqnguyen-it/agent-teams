@@ -4,21 +4,21 @@ How the agent team works: who does what, who may start whom, when a plan needs a
 
 ## 1. Structure
 
-The owner sets direction. The Product Owner (main session) runs the work. Leads deliver, the Software Designer keeps the system coherent, HR decides staffing and capacity, DevOps runs the environments. Members are hired per task.
+The owner sets direction. The Product Owner (main session) runs the work. Leads deliver, the Architect keeps the system coherent, Resource Manager decides staffing and capacity, DevOps runs the environments. Members are hired per task.
 
 ```
                  OWNER
                    │
              PRODUCT OWNER
                    │
-   ┌────────┬──────┼─────────┬────────┐
-FE LEAD  BE LEAD  DESIGNER  DEVOPS    HR
+   ┌────────┬──────┼─────────┬──────────┐
+FE LEAD  BE LEAD  ARCHITECT  DEVOPS   RESOURCE MANAGER
    └───┬────┘
-       │  staffed by HR; released when the plan ends
+       │  staffed by the Resource Manager; released when the plan ends
  DEVELOPER · RESEARCHER · AUDITOR · TESTER · DATA SPECIALIST
 ```
 
-Core roles are PO and HR. The others are switched on in `team.config.json`.
+Core roles are PO and Resource Manager. The others are switched on in `team.config.json`.
 
 ## 2. Roles
 
@@ -27,9 +27,9 @@ Core roles are PO and HR. The others are switched on in `team.config.json`.
 | Owner | Product direction | UI changes, deploy, release | — |
 | Product Owner | Priorities, order of work, reports | Next task; conflicts between leads | Feature code; pushing without the owner's GO |
 | FE / BE Lead | Their repositories; knows whether a plan is complete | Approach inside one boundary | Other repositories; protected branches; tags |
-| Software Designer | Architecture, structure, conventions, data design | Design of anything crossing a boundary | Feature code; priorities; overruling the owner |
+| Architect | Architecture, structure, conventions, data design | Design of anything crossing a boundary | Feature code; priorities; overruling the owner |
 | DevOps | Environments, running applications, test resources | How to provide a resource | Changes beyond its permissions; reading secrets |
-| HR | Roster, skills, capacity | Hire or reuse; WAIT by the budget | Priorities; engineering work |
+| Resource Manager | Roster, skills, capacity | Hire or reuse; WAIT by the budget | Priorities; engineering work |
 | Developer | One task, on a branch | How to implement the approved design | Other repositories; `git stash` |
 | Researcher | One question, with sources | — | Code changes |
 | Auditor | Independent check | ACCEPT or REJECT, with evidence | Fixing what it finds |
@@ -37,7 +37,7 @@ Core roles are PO and HR. The others are switched on in `team.config.json`.
 
 ## 3. Design review
 
-A lead discusses a plan with the Designer before work starts when any line is true:
+A lead discusses a plan with the Architect before work starts when any line is true:
 
 | Trigger | Example |
 |---|---|
@@ -51,7 +51,7 @@ A lead discusses a plan with the Designer before work starts when any line is tr
 
 No review: a change inside one module with no contract change.
 
-Verdicts: APPROVED, CHANGES NEEDED, ESCALATE. Output goes in the plan under `## Design review`. If leads still disagree, the Designer writes both options and the PO takes them to the owner.
+Verdicts: APPROVED, CHANGES NEEDED, ESCALATE. Output goes in the plan under `## Design review`. If leads still disagree, the Architect writes both options and the PO takes them to the owner.
 
 Design rules:
 1. One way per problem.
@@ -72,7 +72,7 @@ DevOps keeps applications running and gives the team what it needs. A lead asks 
 
 ## 5. Staffing and capacity
 
-A lead asks for a skill, not a person. HR decides:
+A lead asks for a skill, not a person. Resource Manager decides:
 
 | Situation | Decision |
 |---|---|
@@ -84,7 +84,7 @@ A lead asks for a skill, not a person. HR decides:
 
 - **Only the PO starts, resumes or stops an agent.** That is the gate that keeps the ceiling.
 - The ceiling is `ceiling` in `team.config.json`; normally 1 or 2 run at once.
-- `.team/tools/hr-check.sh` reads capacity at no token cost. A follow-up reuse on GREEN needs no HR agent.
+- `.team/tools/capacity-check.sh` reads capacity at no token cost. A follow-up reuse on GREEN needs no Resource Manager agent.
 - YELLOW: no new hires, capped runs only. RED: stop every run.
 - Heavy commands run one at a time under `flock`. Tests use capped workers and throwaway containers.
 
@@ -118,7 +118,7 @@ The role is permanent; the agent behind it is not.
 
 ```
 Owner request → PO priority → Lead plan → crosses a boundary? → Design review
-→ HR: hire or reuse → Member builds on a branch, with tests
+→ Resource Manager: hire or reuse → Member builds on a branch, with tests
 → Lead reviews → Auditor → PLAN COMPLETE → PO reports → Owner GO → PO merges and tags
 ```
 
@@ -147,11 +147,11 @@ Repeated work with no judgment is a script. The second time an agent does the sa
 
 ## 11. Skills
 
-A skill is a short how-to proven on real work. An agent reads skills before exploring and writes one when a task took more than one try or will come back. A skill one role uses stays in `team/roles/<role>/skills/`; once a second role needs it, it moves to `team/skills/`. A generic skill can be promoted to this template after Designer review. Under 30 lines; never a guess.
+A skill is a short how-to proven on real work. An agent reads skills before exploring and writes one when a task took more than one try or will come back. A skill one role uses stays in `team/roles/<role>/skills/`; once a second role needs it, it moves to `team/skills/`. A generic skill can be promoted to this template after Architect review. Under 30 lines; never a guess.
 
 ## 12. Models
 
-Defaults are in `team.config.json`. Designer: the strongest model, because its mistakes spread. HR and Tester: the smallest. Others: mid.
+Defaults are in `team.config.json`. Architect: the strongest model, because its mistakes spread. Resource Manager and Tester: the smallest. Others: mid.
 
 ## 13. Git
 
@@ -172,4 +172,4 @@ Team files never go into service repositories.
 
 ## 15. Departments (later phase)
 
-One machine is headquarters: owner, PO, HR, Designer. Each other machine runs a lead with its own members and capacity check. HQ and departments talk through issues and merge requests, not messages. HQ keeps priorities, contracts and releases, enforced by protected branches and limited tokens. Each department has a budget, a time limit and a stop rule. Leads do not message each other: they go through HQ.
+One machine is headquarters: owner, PO, Resource Manager, Architect. Each other machine runs a lead with its own members and capacity check. HQ and departments talk through issues and merge requests, not messages. HQ keeps priorities, contracts and releases, enforced by protected branches and limited tokens. Each department has a budget, a time limit and a stop rule. Leads do not message each other: they go through HQ.
