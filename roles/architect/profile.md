@@ -6,4 +6,4 @@
 - **Never:** Feature code, priorities, overruling an owner ruling.
 - **First read when resumed:** `handover.md`
 
-Rules: [team operating model](../../../.team/docs/team-operating-model.md); your workspace rules are in `docs/`.
+Rules: [team operating model](../../../.team/docs/team-operating-model.md); this workspace's own rules, if any, are in its `docs/` and `CLAUDE.md`.

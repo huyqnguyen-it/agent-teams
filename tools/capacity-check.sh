@@ -8,7 +8,7 @@ read -r MINA STOPA MAXL STOPD < <(python3 - "$CFG" <<'PY'
 import json,sys
 try: c=json.load(open(sys.argv[1])).get('capacity',{})
 except OSError: c={}
-print(c.get('minAvailGb',8),c.get('stopAvailGb',6),c.get('maxLoad5',12),c.get('stopDiskPct',85))
+print(c.get('minAvailGb',8),c.get('stopAvailGb',6),c.get('maxLoad5',12),int(c.get('stopDiskPct',85)))
 PY
 )
 L=$(awk '{print $2}' /proc/loadavg)

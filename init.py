@@ -70,6 +70,7 @@ def main():
     cap = {**detect_capacity(), **local.get('capacity', {})}
     for key in cap:
         cap[key] = float(ask(f'Capacity {key}', cap[key]))
+    cap['stopDiskPct'] = int(cap['stopDiskPct'])
     local = {'capacity': cap, 'boardUrl': ask('Team board URL (empty for none)', local.get('boardUrl', '')),
              'hosts': local.get('hosts', [])}
 
@@ -119,6 +120,14 @@ def main():
         link = skills / skill.name
         if not link.exists():
             link.symlink_to(os.path.relpath(skill, skills))
+
+    settings = ROOT / '.claude' / 'settings.json'
+    data = load(settings, {})
+    allow = data.setdefault('permissions', {}).setdefault('allow', [])
+    rule = 'Bash(.team/tools/capacity-check.sh)'
+    if rule not in allow:
+        allow.append(rule)
+        settings.write_text(json.dumps(data, indent=2) + '\n')
 
     ignore = ROOT / '.gitignore'
     have = ignore.read_text().splitlines() if ignore.exists() else []
