@@ -16,6 +16,13 @@ Order of work for this release. Settings and **Check** are in the named section.
 | 2   | Deploy the API       | sample-api   |
 | 3   | Run the smoke test   | —            |
 
+## Change Log
+
+| Service    | Version  | Change                                      |
+| ---------- | -------- | ------------------------------------------- |
+| sample-api | `v1.0.0` | First release: health check and settings.   |
+| sample-web | `v1.0.0` | First release: sign-in page and dashboard.  |
+
 ## System Topology
 
 ```

@@ -1,7 +1,20 @@
 {
   "groups": [
-    { "name": "Start", "sections": ["Revision", "Runbook"] },
-    { "name": "Reference", "sections": ["System Topology", "Settings"] }
+    {
+      "name": "Start",
+      "sections": [
+        "Revision",
+        "Change Log",
+        "Runbook"
+      ]
+    },
+    {
+      "name": "Reference",
+      "sections": [
+        "System Topology",
+        "Settings"
+      ]
+    }
   ],
   "rest": "Services",
   "checklist": "Runbook"

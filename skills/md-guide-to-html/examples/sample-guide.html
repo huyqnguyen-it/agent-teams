@@ -39,7 +39,7 @@ a{color:var(--accent)}:focus-visible{outline:2px solid var(--accent);outline-off
 </style></head><body><div class="app">
 <nav aria-label="Sections"><h1>Sample Service Guide</h1><div class="ver">Rev 1 · 2026-01-15</div>
 <input type="search" id="q" placeholder="Find a variable, service, path" aria-label="Find">
-<label class="toggle"><input type="checkbox" id="ro"> Required variables only</label><h2>Start</h2><a href="#revision">Revision</a><a href="#runbook">Runbook</a><h2>Reference</h2><a href="#system-topology">System Topology</a><a href="#settings">Settings</a><h2>Services</h2><a href="#sample-api">sample-api</a></nav>
+<label class="toggle"><input type="checkbox" id="ro"> Required variables only</label><h2>Start</h2><a href="#revision">Revision</a><a href="#change-log">Change Log</a><a href="#runbook">Runbook</a><h2>Reference</h2><a href="#system-topology">System Topology</a><a href="#settings">Settings</a><h2>Services</h2><a href="#sample-api">sample-api</a></nav>
 <main><section id="revision"><h2>Revision</h2><table>
 <thead>
 <tr>
@@ -79,6 +79,26 @@ a{color:var(--accent)}:focus-visible{outline:2px solid var(--accent);outline-off
 <td>3</td>
 <td>Run the smoke test</td>
 <td>—</td>
+</tr>
+</tbody>
+</table></section><section id="change-log"><h2>Change Log</h2><table>
+<thead>
+<tr>
+<th>Service</th>
+<th>Version</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>sample-api</td>
+<td><code>v1.0.0</code></td>
+<td>First release: health check and settings.</td>
+</tr>
+<tr>
+<td>sample-web</td>
+<td><code>v1.0.0</code></td>
+<td>First release: sign-in page and dashboard.</td>
 </tr>
 </tbody>
 </table></section><section id="system-topology"><h2>System Topology</h2><pre><code> Browser ──► sample-api ──► database
