@@ -33,6 +33,7 @@ Without Claude: `.team/init.sh` asks in the terminal, and `.team/init.sh --yes` 
 | Path | Contents |
 |---|---|
 | `docs/team-operating-model.md` | The rules |
+| `docs/multi-server.md` | Running the team on several machines |
 | `roles/` | Role definitions |
 | `templates/` | Brief, design review, plan-complete, work report, skill |
 | `tools/` | `capacity-check.sh` |

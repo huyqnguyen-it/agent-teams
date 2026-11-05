@@ -1,5 +1,20 @@
 {
-  "capacity": {"minAvailGb": 8, "stopAvailGb": 6, "maxLoad5": 12, "stopDiskPct": 85},
+  "capacity": {
+    "minAvailGb": 8,
+    "stopAvailGb": 6,
+    "maxLoad5": 12,
+    "stopDiskPct": 85
+  },
   "boardUrl": "",
-  "hosts": []
+  "hosts": [
+    {
+      "name": "pc2",
+      "ssh": "pc2",
+      "path": "~/workspace",
+      "use": [
+        "exec",
+        "worker"
+      ]
+    }
+  ]
 }

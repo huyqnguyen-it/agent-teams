@@ -40,6 +40,10 @@ Never write secrets to these files.
 
 It creates `team/`, generates `.claude/agents/`, links skills, updates `.gitignore` and `CLAUDE.md`, and suggests capacity limits. Reruns never overwrite team data.
 
-## 5. Report
+## 5. More machines
+
+If the owner plans to use more than one machine, point them to `.team/docs/multi-server.md`. Do not set up other machines yourself.
+
+## 6. Report
 
 Show the owner: roles, repositories, commands, capacity limits, and the capacity check line. Then say: start a new Claude Code session so the agents load, and commit `team/`, `CLAUDE.md` and `.gitignore`. Do not commit for them.

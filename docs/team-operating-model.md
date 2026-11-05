@@ -172,6 +172,8 @@ Team files never go into service repositories.
 - **Headless worker:** `ssh host 'claude -p "<brief>"'`, one task then exit. It needs its own login and a tight allow list.
 - Hosts are listed in `team.local.json`. Capacity and `flock` are per machine. Work moves by git.
 
+How to set it up: `.team/docs/multi-server.md`.
+
 ## 15. Departments (later phase)
 
 One machine is headquarters: owner, PO, Resource Manager, Architect. Each other machine runs a lead with its own members and capacity check. HQ and departments talk through issues and merge requests, not messages. HQ keeps priorities, contracts and releases, enforced by protected branches and limited tokens. Each department has a budget, a time limit and a stop rule. Leads do not message each other: they go through HQ.
