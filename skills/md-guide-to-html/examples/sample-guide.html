@@ -1,5 +1,5 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Sample Service Guide</title><style>
+<title>Sample Service Deployment Guide</title><style>
 :root{--bg:#f1f4f5;--surface:#fff;--raised:#f7f9fa;--ink:#17242a;--muted:#56666f;--line:#d5dee1;--accent:#0f6b78;--soft:#dff0f2;--on:#fff;--req:#a3480f;--req-soft:#fcecdd;--ok:#1f7a4d;--ok-soft:#e1f3e9;
 --body:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"DejaVu Sans Mono",monospace}
 @media (prefers-color-scheme:dark){:root{--bg:#0e1417;--surface:#172126;--raised:#1d292f;--ink:#e2eaed;--muted:#9bacb5;--line:#2a373e;--accent:#62c4d4;--soft:#14323a;--on:#0e1417;--req:#f2a766;--req-soft:#3a2614;--ok:#6fd09b;--ok-soft:#163126;color-scheme:dark}}
@@ -37,9 +37,9 @@ a{color:var(--accent)}:focus-visible{outline:2px solid var(--accent);outline-off
 @media (max-width:900px){.app{display:block}nav{position:static;height:auto;max-height:45vh;border-right:0;border-bottom:1px solid var(--line)}main{padding:12px}}
 @media print{nav,.copy{display:none}.app{display:block}section{break-inside:avoid;border:0}}
 </style></head><body><div class="app">
-<nav aria-label="Sections"><h1>Sample Service Guide</h1><div class="ver">Rev 1 · 2026-01-15</div>
+<nav aria-label="Sections"><h1>Sample Service Deployment Guide</h1><div class="ver">Rev 2 · 2026-02-20</div>
 <input type="search" id="q" placeholder="Find a variable, service, path" aria-label="Find">
-<label class="toggle"><input type="checkbox" id="ro"> Required variables only</label><h2>Start</h2><a href="#revision">Revision</a><a href="#change-log">Change Log</a><a href="#runbook">Runbook</a><h2>Reference</h2><a href="#system-topology">System Topology</a><a href="#settings">Settings</a><h2>Services</h2><a href="#sample-api">sample-api</a></nav>
+<label class="toggle"><input type="checkbox" id="ro"> Required variables only</label><h2>Start</h2><a href="#revision">Revision</a><a href="#infrastructure-request">Infrastructure Request</a><a href="#before-you-start">Before You Start</a><a href="#runbook">Runbook</a><h2>Release</h2><a href="#services">Services</a><a href="#system-topology">System Topology</a><h2>Service details</h2><a href="#sample-api">sample-api</a><a href="#sample-search">sample-search</a><h2>Configuration</h2><a href="#settings">Settings</a><a href="#data-store">Data store</a><h2>Operations</h2><a href="#post-deploy-operations">Post-Deploy Operations</a><a href="#change-summary">Change Summary</a></nav>
 <main><section id="revision"><h2>Revision</h2><table>
 <thead>
 <tr>
@@ -54,6 +54,99 @@ a{color:var(--accent)}:focus-visible{outline:2px solid var(--accent);outline-off
 <td>2026-01-15</td>
 <td>First release</td>
 </tr>
+<tr>
+<td>2</td>
+<td>2026-02-20</td>
+<td>Search and a new volume</td>
+</tr>
+</tbody>
+</table>
+<p>Note:
+ - A variable absent from the manifest takes the Default.
+ - Example = the value set on staging; blank = Default.</p></section><section id="infrastructure-request"><h2>Infrastructure Request</h2><p>New resources this release needs. Prepare them before the Runbook starts.</p>
+<p><strong>New services</strong></p>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>Replicas</th>
+<th>CPU request</th>
+<th>Memory request / limit</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>sample-search</td>
+<td>1</td>
+<td><code>100m</code></td>
+<td><code>256Mi</code> / <code>1Gi</code></td>
+<td>Search index.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>New data stores</strong></p>
+<table>
+<thead>
+<tr>
+<th>Volume</th>
+<th>Size</th>
+<th>Access</th>
+<th>Used by</th>
+<th>Retention</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>search-data</code></td>
+<td><code>10Gi</code></td>
+<td><code>ReadWriteOnce</code></td>
+<td>sample-search</td>
+<td>7 days</td>
+</tr>
+</tbody>
+</table></section><section id="before-you-start"><h2>Before You Start</h2><p><strong>Words used in this guide</strong></p>
+<table>
+<thead>
+<tr>
+<th>Word</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>API</td>
+<td>The sample-api service</td>
+</tr>
+</tbody>
+</table>
+<p><strong>How to deploy one service</strong></p>
+<ol>
+<li>Compare the service's variables with its manifest.</li>
+<li>Apply the manifest.</li>
+<li>Wait for the rollout.</li>
+<li>Run the section's <strong>Check</strong>. Do not start the next step until it passes.</li>
+</ol>
+<p><strong>If a step fails</strong></p>
+<table>
+<thead>
+<tr>
+<th>You see</th>
+<th>Likely cause</th>
+<th>What to do</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Pod stays <code>ContainerCreating</code></td>
+<td>Volume not bound</td>
+<td>Check the volume</td>
+</tr>
+<tr>
+<td>Anything else</td>
+<td></td>
+<td>Stop, keep the logs, call the service owner</td>
+</tr>
 </tbody>
 </table></section><section id="runbook"><h2>Runbook</h2><p>Order of work for this release. Settings and <strong>Check</strong> are in the named section.</p>
 <table>
@@ -67,41 +160,55 @@ a{color:var(--accent)}:focus-visible{outline:2px solid var(--accent);outline-off
 <tbody>
 <tr>
 <td>1</td>
-<td>Create the settings</td>
+<td>Apply settings</td>
 <td>Settings</td>
 </tr>
 <tr>
 <td>2</td>
-<td>Deploy the API</td>
-<td>sample-api</td>
+<td>Create the volume</td>
+<td>Data store</td>
 </tr>
 <tr>
 <td>3</td>
-<td>Run the smoke test</td>
+<td>Deploy sample-search</td>
+<td>sample-search</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Deploy sample-api</td>
+<td>sample-api</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Smoke test</td>
 <td>—</td>
 </tr>
 </tbody>
-</table></section><section id="change-log"><h2>Change Log</h2><table>
+</table>
+<p>Notes:
+ - Rollback: redeploy the previous image tags, in reverse order.
+ - Smoke test passes when: a search returns a result.</p></section><section id="services"><h2>Services</h2><table>
 <thead>
 <tr>
 <th>Service</th>
-<th>Version</th>
-<th>Change</th>
+<th>Image</th>
+<th>Tag</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>sample-api</td>
-<td><code>v1.0.0</code></td>
-<td>First release: health check and settings.</td>
+<td><code>registry.example.com/sample-api</code></td>
+<td><code>v1.1.0</code></td>
 </tr>
 <tr>
-<td>sample-web</td>
+<td>sample-search</td>
+<td><code>registry.example.com/sample-search</code></td>
 <td><code>v1.0.0</code></td>
-<td>First release: sign-in page and dashboard.</td>
 </tr>
 </tbody>
 </table></section><section id="system-topology"><h2>System Topology</h2><pre><code> Browser ──► sample-api ──► database
+                 └────────► sample-search ──► search-data
 </code></pre></section><section id="settings"><h2>Settings</h2><table>
 <thead>
 <tr>
@@ -128,7 +235,25 @@ a{color:var(--accent)}:focus-visible{outline:2px solid var(--accent);outline-off
 <td>Logger threshold.</td>
 </tr>
 </tbody>
-</table></section><section id="sample-api"><h2>sample-api</h2><p><strong>Image:</strong> <code>registry.example.com/sample-api:v1.0.0</code></p>
+</table></section><section id="data-store"><h2>Data store</h2><table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Volume</td>
+<td><code>search-data</code>, <code>10Gi</code></td>
+</tr>
+<tr>
+<td>Mount</td>
+<td><code>/data</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Check:</strong> the volume is <code>Bound</code>.</p></section><section id="sample-api"><h2>sample-api</h2><p><strong>Image:</strong> <code>registry.example.com/sample-api:v1.1.0</code></p>
 <table>
 <thead>
 <tr>
@@ -148,6 +273,13 @@ a{color:var(--accent)}:focus-visible{outline:2px solid var(--accent);outline-off
 <td>Primary store.</td>
 </tr>
 <tr>
+<td><code>SEARCH_URL</code></td>
+<td>URL</td>
+<td>unset</td>
+<td>no</td>
+<td>Search endpoint.</td>
+</tr>
+<tr>
 <td><code>PORT</code></td>
 <td>number</td>
 <td><code>8080</code></td>
@@ -159,7 +291,128 @@ a{color:var(--accent)}:focus-visible{outline:2px solid var(--accent);outline-off
 <p><strong>Check:</strong></p>
 <pre><code class="language-bash">curl -s http://sample-api:8080/health
 </code></pre>
-<p>Expected: <code>200</code>.</p></section><div class="none" id="none" hidden>Nothing matches. Clear the search box.</div></main></div><script>
+<p>Expected: <code>200</code>.</p></section><section id="sample-search"><h2>sample-search</h2><p><strong>Image:</strong> <code>registry.example.com/sample-search:v1.0.0</code></p>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Type</th>
+<th>Default</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DATA_DIR</code></td>
+<td>string</td>
+<td><code>/data</code></td>
+<td>no</td>
+<td>Data folder.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Check:</strong> <code>curl -s http://sample-search:9000/health</code> → 200.</p></section><section id="post-deploy-operations"><h2>Post-Deploy Operations</h2><h3>Rebuild the search index</h3>
+<pre><code class="language-bash">curl -X POST http://sample-api:8080/admin/reindex
+</code></pre>
+<p>Expected: <code>202</code>.</p></section><section id="change-summary"><h2>Change Summary</h2><p>Everything that changes against Rev 1, in one place. Compare it with the environment before you deploy.</p>
+<h3>Services</h3>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>Rev 1</th>
+<th>This release</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>sample-api</td>
+<td><code>v1.0.0</code></td>
+<td><code>v1.1.0</code></td>
+</tr>
+</tbody>
+</table>
+<p>New services: sample-search <code>v1.0.0</code>.</p>
+<h3>Infrastructure</h3>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Volumes</td>
+<td>New: <code>search-data</code> <code>10Gi</code></td>
+</tr>
+</tbody>
+</table>
+<h3>Ingress</h3>
+<table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Rev 1</th>
+<th>This release</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/search</code></td>
+<td>—</td>
+<td>New: sample-search</td>
+</tr>
+</tbody>
+</table>
+<h3>Environment: renamed</h3>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>Old</th>
+<th>New</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>sample-api</td>
+<td><code>DB_URL</code></td>
+<td><code>DATABASE_URL</code></td>
+</tr>
+</tbody>
+</table>
+<h3>Environment: removed</h3>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>Variables</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>sample-api</td>
+<td><code>LEGACY_API</code></td>
+</tr>
+</tbody>
+</table>
+<h3>Environment: new</h3>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>Variables</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>sample-api</td>
+<td><code>SEARCH_URL</code></td>
+</tr>
+</tbody>
+</table></section><div class="none" id="none" hidden>Nothing matches. Clear the search box.</div></main></div><script>
 const $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const store={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 $$('table').forEach(t=>{const w=document.createElement('div');w.className='tbl';t.replaceWith(w);w.append(t);

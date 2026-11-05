@@ -1,21 +1,11 @@
 {
   "groups": [
-    {
-      "name": "Start",
-      "sections": [
-        "Revision",
-        "Change Log",
-        "Runbook"
-      ]
-    },
-    {
-      "name": "Reference",
-      "sections": [
-        "System Topology",
-        "Settings"
-      ]
-    }
+    { "name": "Start", "sections": ["Revision", "Infrastructure Request", "Before You Start", "Runbook"] },
+    { "name": "Release", "sections": ["Services", "System Topology"] },
+    { "name": "Configuration", "sections": ["Settings", "Data store"] },
+    { "name": "Operations", "sections": ["Post-Deploy Operations", "Change Summary"] }
   ],
-  "rest": "Services",
+  "rest": "Service details",
+  "restAfter": 2,
   "checklist": "Runbook"
 }

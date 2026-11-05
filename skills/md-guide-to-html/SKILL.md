@@ -18,15 +18,41 @@ The `.md` stays the source. The HTML is generated, so never edit it by hand: edi
 
 ## Steps
 
-1. Write the guide: one `#` title, `##` sections, pipe tables. A blank line must come before each table.
+1. Start from `assets/deployment-guide-template.md` for a deployment guide, or any Markdown with one `#` title, `##` sections and pipe tables. A blank line must come before each table.
 2. Copy `guide.config.example.json` beside the guide as `<guide>.config.json`, and list the menu groups. Without a config, all sections go in one group.
-3. Build: `python3 .team/skills/md-guide-to-html/scripts/guide-md-to-html.py <guide>.md`. Needs Python `markdown`.
-4. Check that every table row has the same column count as its header. A broken row shows under the wrong header in the HTML too.
+3. Check: `python3 .team/skills/md-guide-to-html/scripts/guide-check.py <guide>.md`. Fix everything it reports: a broken row shows under the wrong header in the HTML too.
+4. Build: `python3 .team/skills/md-guide-to-html/scripts/guide-md-to-html.py <guide>.md`. Needs Python `markdown`.
 5. Open the page once in a browser.
+
+## Deployment guide structure
+
+Keep this order. A reader must find what to prepare and what to run first, and what changed last.
+
+| Section | Holds |
+|---|---|
+| Revision | Rev, date, scope, and how to read the tables |
+| Infrastructure Request | New services with resources, new data stores, other requests |
+| Before You Start | Glossary, names in Check lines, how to deploy one service, if a step fails |
+| Runbook | Numbered steps naming their section; rollback; what a passing smoke test looks like |
+| Services, Topology | Image and tag table; an ASCII diagram |
+| Configuration | Ingress, ConfigMap, secrets, data stores |
+| One section per service | Image, variables, a **Check** line |
+| Post-Deploy Operations | Commands with expected results |
+| Change Summary (last) | Everything that changed against the last release, for DevOps to compare with the environment |
+
+## Change Summary
+
+Generate it, never write it from memory:
+
+```bash
+python3 .team/skills/md-guide-to-html/scripts/guide-diff.py <last-guide>.md <this-guide>.md
+```
+
+Use the output for these tables: Services, Infrastructure, Ingress, Environment renamed, removed and new. The tool compares documents, not code: "new" can mean newly documented, "removed" means no longer in the guide, and a rename shows as a removal plus an addition. Check each line against the manifests.
 
 ## Example
 
-`examples/` has a small input and its output: `sample-guide.md`, `sample-guide.config.json`, `sample-guide.html`. Copy the Markdown as a starting point, and open the HTML to see the result.
+`examples/` has a full sample: `sample-guide.md`, `sample-guide.config.json`, `sample-guide.html`. Open the HTML to see the result.
 
 ## Config
 
