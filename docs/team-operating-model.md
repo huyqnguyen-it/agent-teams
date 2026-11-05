@@ -92,7 +92,7 @@ A lead asks for a skill, not a person. Resource Manager decides:
 - A hire that must WAIT: the PO records it on the board and retries at the next step. Do not poll in a loop; a background wait uses `tools/capacity-check.sh` only where the session allows it.
 - No `docs/` folder is fine: briefs then say which conventions to follow from the existing code.
 - Scale the audit to the risk: a small change in one module needs the lead's review, not a hired Auditor. Plans that cross a boundary or change a contract always get one.
-- Heavy commands run one at a time under `flock`. Tests use the project `commands` in `team.config.json`, capped workers where the tool supports them, and throwaway containers.
+- Heavy commands (docker builds, large suites) run one at a time under `flock`; a short test run of a small project does not need it, and a wrapper command may not match a restricted allow list. Tests use the project `commands` in `team.config.json`, capped workers where the tool supports them, and throwaway containers.
 
 Messages:
 

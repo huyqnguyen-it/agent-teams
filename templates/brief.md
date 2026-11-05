@@ -5,7 +5,7 @@
 - **Repo or worktree, branch:**
 - **Files to change / read:**
 - **Done when:**
-- **Limits:** `--maxWorkers=2`; heavy commands under `flock`; no push or tag; never read Secrets
+- **Limits:** capped workers where the tool supports them; heavy commands (docker builds, large suites) under `flock`, a small project's test run is not heavy; no push or tag; never read Secrets
 
 Before stopping, append your entry to `team/log/YYMMDD.md` (format: `.team/templates/work-report.md`).
 
