@@ -9,6 +9,11 @@ TEAM = ROOT / 'team'
 YES = '--yes' in sys.argv
 OPTIONAL = ['architect', 'devops', 'fe-lead', 'be-lead']
 CORE = ['product-owner', 'resource-manager']
+MEMBERS = {'developer': 'Developer: one task, one repository, on a branch, with tests',
+           'researcher': 'Researcher: one question answered with sources',
+           'auditor': 'Auditor: independent check of finished work, ACCEPT or REJECT',
+           'tester': 'Tester: runs suites and reports real results',
+           'data-specialist': 'Data Specialist: query analysis, index tests, rebuild plans'}
 DESC = {'resource-manager': 'Resource Manager: hire-or-reuse decisions and the capacity budget',
         'architect': 'Architect: architecture, conventions, cross-boundary design review',
         'devops': 'DevOps: environments, running apps, resources for teams',
@@ -77,6 +82,7 @@ def main():
         write_new(TEAM / 'status' / name, (sk / 'status' / name).read_text())
     (TEAM / 'log').mkdir(exist_ok=True)
     (TEAM / 'skills').mkdir(exist_ok=True)
+    (TEAM / 'tools').mkdir(exist_ok=True)
     for role in cfg['roles']:
         base = TEAM / 'roles' / role
         write_new(base / 'handover.md', (sk / 'handover.md').read_text())
@@ -94,10 +100,19 @@ def main():
     tmpl = (TPL / 'agents' / 'agent.md.tmpl').read_text()
     for role in set(DESC) - set(cfg['roles']):  # a role switched off loses its generated agent
         (agents / f'{role}.md').unlink(missing_ok=True)
+    finish = 'Before you stop, append your entry to team/log/YYMMDD.md'
     for role in cfg['roles']:
         if role in DESC:
-            (agents / f'{role}.md').write_text(tmpl.replace('{{name}}', role).replace(
+            base = f'team/roles/{role}'
+            text = tmpl.replace('{{start}}', f'Read {base}/profile.md, then {base}/handover.md.')
+            text = text.replace('{{finish}}', f'{finish} and replace {base}/handover.md.')
+            (agents / f'{role}.md').write_text(text.replace('{{name}}', role).replace(
                 '{{description}}', DESC[role]).replace('{{model}}', cfg['models'][role]))
+    for role, desc in MEMBERS.items():
+        text = tmpl.replace('{{start}}', f'Read .team/roles/members/{role}.md, then your brief.')
+        text = text.replace('{{finish}}', f'{finish}.')
+        (agents / f'{role}.md').write_text(text.replace('{{name}}', role).replace(
+            '{{description}}', desc).replace('{{model}}', cfg['models'][role]))
     skills = ROOT / '.claude' / 'skills'
     skills.mkdir(exist_ok=True)
     for skill in (TPL / 'skills').iterdir():
@@ -117,7 +132,9 @@ def main():
     text = claude.read_text() if claude.exists() else ''
     if note not in text:
         with claude.open('a') as f:
-            f.write(f'\n## Agent team\n\nTeam rules: {note}\nTeam data: `team/`. The main session is the Product Owner.\n')
+            f.write(f'\n## Agent team\n\nTeam rules: {note}\nThe main session is the Product Owner.\n\n'
+                    '| Need | Where |\n|---|---|\n| Roles, templates, shared tools and skills | `.team/` (never edit) |\n'
+                    '| Status, roster, board, log, handovers | `team/` |\n| Workspace skills and tools | `team/skills/`, `team/tools/` |\n')
     print('Team ready. Roles:', ', '.join(cfg['roles']))
     print(subprocess.run([str(TPL / 'tools' / 'capacity-check.sh')], capture_output=True, text=True).stdout.strip())
 

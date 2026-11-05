@@ -19,7 +19,7 @@ git clone https://github.com/huyqnguyen-it/agent-teams.git .team
 | `.team/` | This template: never edit it in a workspace | Ignored |
 | `team/team.config.json` | Shared settings | Committed |
 | `team/team.local.json` | This machine's limits | Ignored |
-| `team/status/`, `team/roles/`, `team/skills/`, `team/log/` | Workspace team data | Committed, except handovers |
+| `team/status/`, `team/roles/`, `team/skills/`, `team/tools/`, `team/log/` | Workspace team data | Committed, except handovers |
 | `.claude/agents/`, `.claude/skills/` | Generated | Ignored |
 
 ## Update
