@@ -157,20 +157,12 @@ New services: sample-search `v1.0.0`.
 | --------- | ----- | ------------------ |
 | `/search` | —     | New: sample-search |
 
-### Environment: renamed
+### Environment
 
-| Service    | Old      | New            |
-| ---------- | -------- | -------------- |
-| sample-api | `DB_URL` | `DATABASE_URL` |
+One row per variable. <del>Struck through</del> = removed or replaced.
 
-### Environment: removed
-
-| Service    | Variables    |
-| ---------- | ------------ |
-| sample-api | `LEGACY_API` |
-
-### Environment: new
-
-| Service    | Variables    |
-| ---------- | ------------ |
-| sample-api | `SEARCH_URL` |
+| Service    | Old                     | New            | Value                       |
+| ---------- | ----------------------- | -------------- | --------------------------- |
+| sample-api | <del>`DB_URL`</del>     | `DATABASE_URL` | From Secret                 |
+| sample-api | <del>`LEGACY_API`</del> | —              | Removed                     |
+| sample-api | —                       | `SEARCH_URL`   | `http://sample-search:9000` |

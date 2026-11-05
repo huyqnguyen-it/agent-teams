@@ -52,7 +52,7 @@ Generate it, never write it from memory:
 python3 .team/skills/md-guide-to-html/scripts/guide-diff.py <last-guide>.md <this-guide>.md
 ```
 
-Use the output for these tables: Services, Infrastructure, Ingress, Environment renamed, removed and new. The tool compares documents, not code: "new" can mean newly documented, "removed" means no longer in the guide, and a rename shows as a removal plus an addition. Check each line against the manifests.
+Use the output for these tables: Services, Infrastructure, Ingress, Environment. Environment is one table, `Service | Old | New | Value`, with one row per variable: a removed or replaced name is struck through with `<del>`, and a removed row has `Removed` as its value. The tool compares documents, not code: "new" can mean newly documented, "removed" means no longer in the guide, and a rename shows as a removal plus an addition. Check each line against the manifests.
 
 ## Example
 

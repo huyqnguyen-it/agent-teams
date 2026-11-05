@@ -44,7 +44,7 @@ pre code{background:none;padding:0;font-size:inherit;overflow-wrap:normal}
 .prog{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin:6px 0}.prog i{display:block;height:100%;width:0;background:var(--ok)}
 .progt{color:var(--muted);font-size:.8rem}
 .none{color:var(--muted);padding:20px}
-a{color:var(--accent)}:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+del{color:var(--muted)}a{color:var(--accent)}:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 @media (max-width:900px){.app{display:block}nav{position:static;height:auto;max-height:45vh;border-right:0;border-bottom:1px solid var(--line)}main{padding:12px}}
 @media print{nav,.copy{display:none}.app{display:block}section{break-inside:avoid;border:0}}
 '''

@@ -33,7 +33,7 @@ pre code{background:none;padding:0;font-size:inherit;overflow-wrap:normal}
 .prog{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin:6px 0}.prog i{display:block;height:100%;width:0;background:var(--ok)}
 .progt{color:var(--muted);font-size:.8rem}
 .none{color:var(--muted);padding:20px}
-a{color:var(--accent)}:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+del{color:var(--muted)}a{color:var(--accent)}:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 @media (max-width:900px){.app{display:block}nav{position:static;height:auto;max-height:45vh;border-right:0;border-bottom:1px solid var(--line)}main{padding:12px}}
 @media print{nav,.copy{display:none}.app{display:block}section{break-inside:avoid;border:0}}
 </style></head><body><div class="app">
@@ -366,50 +366,35 @@ a{color:var(--accent)}:focus-visible{outline:2px solid var(--accent);outline-off
 </tr>
 </tbody>
 </table>
-<h3>Environment: renamed</h3>
+<h3>Environment</h3>
+<p>One row per variable. <del>Struck through</del> = removed or replaced.</p>
 <table>
 <thead>
 <tr>
 <th>Service</th>
 <th>Old</th>
 <th>New</th>
+<th>Value</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>sample-api</td>
-<td><code>DB_URL</code></td>
+<td><del><code>DB_URL</code></del></td>
 <td><code>DATABASE_URL</code></td>
+<td>From Secret</td>
 </tr>
-</tbody>
-</table>
-<h3>Environment: removed</h3>
-<table>
-<thead>
-<tr>
-<th>Service</th>
-<th>Variables</th>
-</tr>
-</thead>
-<tbody>
 <tr>
 <td>sample-api</td>
-<td><code>LEGACY_API</code></td>
+<td><del><code>LEGACY_API</code></del></td>
+<td>—</td>
+<td>Removed</td>
 </tr>
-</tbody>
-</table>
-<h3>Environment: new</h3>
-<table>
-<thead>
-<tr>
-<th>Service</th>
-<th>Variables</th>
-</tr>
-</thead>
-<tbody>
 <tr>
 <td>sample-api</td>
+<td>—</td>
 <td><code>SEARCH_URL</code></td>
+<td><code>http://sample-search:9000</code></td>
 </tr>
 </tbody>
 </table></section><div class="none" id="none" hidden>Nothing matches. Clear the search box.</div></main></div><script>

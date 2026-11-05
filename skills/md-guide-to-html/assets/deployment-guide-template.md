@@ -123,17 +123,9 @@ New services: <service> `<tag>`.
 | Path      | Rev 1 | This release       |
 | --------- | ----- | ------------------ |
 
-### Environment: renamed
+### Environment
 
-| Service    | Old      | New            |
-| ---------- | -------- | -------------- |
+One row per variable. <del>Struck through</del> = removed or replaced.
 
-### Environment: removed
-
-| Service    | Variables    |
-| ---------- | ------------ |
-
-### Environment: new
-
-| Service    | Variables    |
-| ---------- | ------------ |
+| Service | Old | New | Value |
+| ------- | --- | --- | ----- |
