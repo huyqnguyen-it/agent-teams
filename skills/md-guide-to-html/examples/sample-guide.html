@@ -3,7 +3,7 @@
 :root{--bg:#f1f4f5;--surface:#fff;--raised:#f7f9fa;--ink:#17242a;--muted:#56666f;--line:#d5dee1;--accent:#0f6b78;--soft:#dff0f2;--on:#fff;--req:#a3480f;--req-soft:#fcecdd;--ok:#1f7a4d;--ok-soft:#e1f3e9;
 --body:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"DejaVu Sans Mono",monospace}
 @media (prefers-color-scheme:dark){:root{--bg:#0e1417;--surface:#172126;--raised:#1d292f;--ink:#e2eaed;--muted:#9bacb5;--line:#2a373e;--accent:#62c4d4;--soft:#14323a;--on:#0e1417;--req:#f2a766;--req-soft:#3a2614;--ok:#6fd09b;--ok-soft:#163126;color-scheme:dark}}
-*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:12px}
+*{box-sizing:border-box}html{scroll-padding-top:12px}
 body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 var(--body)}
 .app{display:grid;grid-template-columns:272px minmax(0,1fr);min-height:100vh}
 nav{position:sticky;top:0;height:100vh;overflow:auto;background:var(--surface);border-right:1px solid var(--line);padding:14px}
@@ -430,6 +430,18 @@ function apply(){const t=q.value.trim().toLowerCase(),r=ro.checked;let any=false
     const l=links.find(a=>a.hash==='#'+s.id);if(l)l.hidden=!vis});
   none.hidden=any}
 q.oninput=apply;ro.onchange=apply;
-const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('on',a.hash==='#'+e.target.id))}}),{rootMargin:'0px 0px -80% 0px'});
-secs.forEach(s=>io.observe(s));
+// Menu: jump at once, mark the chosen item, and keep the mark in step with the scroll position.
+const mark=id=>links.forEach(a=>{const on=a.hash==='#'+id;a.classList.toggle('on',on);if(on)a.scrollIntoView({block:'nearest'})});
+let chosen=null;
+const current=()=>{const shown=secs.filter(s=>!s.hidden);let id=shown[0]&&shown[0].id;
+  for(const s of shown){if(s.getBoundingClientRect().top<=80)id=s.id;else break}
+  return id};
+let tick=false;
+addEventListener('scroll',()=>{if(tick)return;tick=true;requestAnimationFrame(()=>{tick=false;
+  if(chosen){const r=document.getElementById(chosen).getBoundingClientRect();if(Math.abs(r.top)>4&&innerHeight+scrollY<document.documentElement.scrollHeight-2)chosen=null}
+  mark(chosen||current())})},{passive:true});
+links.forEach(a=>a.addEventListener('click',e=>{e.preventDefault();const id=a.hash.slice(1),t=document.getElementById(id);
+  if(t.hidden){q.value='';ro.checked=false;apply()}
+  t.scrollIntoView({block:'start'});chosen=id;mark(id);history.replaceState(null,'','#'+id)}));
+mark(location.hash?location.hash.slice(1):current());
 </script></body></html>
