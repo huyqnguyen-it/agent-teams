@@ -1,0 +1,44 @@
+{
+  "groups": [
+    {
+      "name": "Start",
+      "sections": [
+        "Revision",
+        "Infrastructure Request",
+        "Before You Start",
+        "Runbook"
+      ]
+    },
+    {
+      "name": "Release",
+      "sections": [
+        "1st Party Services",
+        "Libraries",
+        "3rd Party Services",
+        "System Topology"
+      ]
+    },
+    {
+      "name": "Configuration",
+      "sections": [
+        "Ingress",
+        "Global ConfigMap",
+        "Backend Service ConfigMap",
+        "Secrets",
+        "Shared Secrets",
+        "Global Secret",
+        "Data store"
+      ]
+    },
+    {
+      "name": "Operations",
+      "sections": [
+        "Post-Deploy Operations",
+        "Env Changes"
+      ]
+    }
+  ],
+  "rest": "Services",
+  "restAfter": 2,
+  "checklist": "Runbook"
+}

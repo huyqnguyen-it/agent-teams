@@ -1,0 +1,5 @@
+{
+  "capacity": {"minAvailGb": 8, "stopAvailGb": 6, "maxLoad5": 12, "stopDiskPct": 85},
+  "boardUrl": "",
+  "hosts": []
+}

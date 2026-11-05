@@ -1,0 +1,9 @@
+{
+  "templateVersion": "main",
+  "roles": ["product-owner", "hr", "designer", "devops", "fe-lead", "be-lead"],
+  "models": {"hr": "haiku", "designer": "opus", "devops": "sonnet", "fe-lead": "sonnet", "be-lead": "sonnet",
+             "developer": "sonnet", "auditor": "sonnet", "researcher": "sonnet", "tester": "haiku", "data-specialist": "sonnet"},
+  "repos": {"fe-lead": ["apps/web"], "be-lead": ["services/*"]},
+  "devopsPermissions": "read logs and pipelines; changes through the release pipeline",
+  "ceiling": 4
+}
