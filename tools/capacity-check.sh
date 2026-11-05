@@ -15,7 +15,8 @@ L=$(awk '{print $2}' /proc/loadavg)
 D=$(df / | awk 'NR==2{print $5+0}')
 A=$(free -m | awk '/Mem/{printf "%.1f", $7/1024}')
 SW=$(free -m | awk '/Swap/{ if($2>0) printf "%.0f", $3/$2*100; else print 0}')
-OOM=$(journalctl -k --since -6min 2>/dev/null | grep -ci "out of memory")
+# Host out-of-memory only: a container hitting its own limit logs "Memory cgroup out of memory" and is not a host shortage.
+OOM=$(journalctl -k --since -6min 2>/dev/null | grep -i "out of memory" | grep -vci "memory cgroup")
 HEAVY=$(pgrep -fc 'jest|vitest|docker build')
 ST=GREEN
 awk -v l="$L" -v m="$MAXL" 'BEGIN{exit !(l<m)}' || ST=YELLOW

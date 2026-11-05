@@ -56,6 +56,9 @@ ssh pc2 'cd ~/workspace && timeout 280 ~/.local/bin/claude -p "$(cat ~/brief.md)
 - Always set a budget, and use `timeout` as well.
 - Headless cannot ask for approval. List what it may run in `--allowedTools`, and keep it tight. Never skip permissions.
 - `Bash(x:*)` matches `x` followed by a space. `Bash(git fetch host:*)` does not match `git fetch host:repo`: write the full command as the rule.
+- A rule matches the command as typed: `Bash(~/run.sh:*)` and `Bash(/home/ubuntu/run.sh:*)` are different rules. Tell the worker the exact form to use.
+- A headless worker ignores `.claude/settings.json` until the workspace is trusted, so pass permissions on the command line.
+- Commit messages carry no AI or co-author line: say so in the brief, as `templates/brief.md` does.
 - A chained command (`a && b`, `a; b`) is denied unless every part is allowed. Tell the worker to run one command per call.
 - The result is the worker's output and its branch. The worker pushes that branch to the shared remote. With no remote the worker can reach, fetch it from the machine you started it from: `git fetch pc2:workspace feat/x:feat/x`.
 
@@ -82,6 +85,19 @@ Start Claude Code with Remote Control on that machine, in `tmux`, on the same ac
 | Permissions | A denial on one machine is not routed through another |
 | Work log | Each machine appends its entry on its branch; the lead merges it. `init` sets `team/log/*.md` to `merge=union`, so entries from two branches keep both, in no fixed order |
 | Board | Only the PO's session writes it. A worker returns a question in its reply or on its branch, and the PO adds it. A headless worker on another machine does not have the Artifact tools |
+
+## Questions from a worker on another machine
+
+A worker has no board tools, so a machine with them relays. Tested on two VMs with an owner's answer.
+
+1. The worker writes the question to a file on its branch, then stops.
+2. The relay reads it and adds it to the board.
+3. The relay reads the answer from the board, which wakes nobody, so it checks on a timer with a time limit.
+4. The relay starts the next run with the answer in its brief. It never answers for the owner.
+
+## Multipass test machines
+
+An instance named `primary` mounts your whole home folder read-write at `~/Home`. Remove that before any agent runs there: `multipass umount primary`. Use another name for new instances.
 
 ## Check before relying on it
 

@@ -142,6 +142,9 @@ def main():
     if union not in (attrs.read_text().splitlines() if attrs.exists() else []):
         with attrs.open('a') as f:
             f.write(union + '\n')
+    identity = subprocess.run(['git', 'config', 'user.email'], cwd=ROOT, capture_output=True, text=True).stdout.strip()
+    if not identity:  # a fresh machine has none, and a worker cannot commit without it
+        print('Warning: no git identity here. Set git config user.name and user.email before starting a worker.')
     claude = ROOT / 'CLAUDE.md'
     note = '@.team/docs/team-operating-model.md'
     text = claude.read_text() if claude.exists() else ''
