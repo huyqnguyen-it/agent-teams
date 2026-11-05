@@ -67,6 +67,7 @@ def main():
     if 'devops' in roles:
         cfg['devopsPermissions'] = ask('What may DevOps change?', cfg['devopsPermissions'])
     cfg['ceiling'] = int(ask('Most agents running at once', cfg['ceiling']))
+    cfg.setdefault('commands', example.get('commands', {}))
     cap = {**detect_capacity(), **local.get('capacity', {})}
     for key in cap:
         cap[key] = float(ask(f'Capacity {key}', cap[key]))

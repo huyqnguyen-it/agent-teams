@@ -88,7 +88,7 @@ A lead asks for a skill, not a person. Resource Manager decides:
 - YELLOW: no new hires, capped runs only. RED: stop every run.
 - A hire that must WAIT: the PO records it on the board and retries at the next step. Do not poll in a loop; a background wait uses `tools/capacity-check.sh` only where the session allows it.
 - Scale the audit to the risk: a small change in one module needs the lead's review, not a hired Auditor. Plans that cross a boundary or change a contract always get one.
-- Heavy commands run one at a time under `flock`. Tests use capped workers and throwaway containers.
+- Heavy commands run one at a time under `flock`. Tests use the project `commands` in `team.config.json`, capped workers where the tool supports them, and throwaway containers.
 
 Messages:
 

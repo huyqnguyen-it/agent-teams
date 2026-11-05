@@ -1,9 +1,38 @@
 {
   "templateVersion": "main",
-  "roles": ["product-owner", "resource-manager", "architect", "devops", "fe-lead", "be-lead"],
-  "models": {"resource-manager": "haiku", "architect": "opus", "devops": "sonnet", "fe-lead": "sonnet", "be-lead": "sonnet",
-             "developer": "sonnet", "auditor": "sonnet", "researcher": "sonnet", "tester": "haiku", "data-specialist": "sonnet"},
-  "repos": {"fe-lead": ["apps/web"], "be-lead": ["services/*"]},
+  "roles": [
+    "product-owner",
+    "resource-manager",
+    "architect",
+    "devops",
+    "fe-lead",
+    "be-lead"
+  ],
+  "models": {
+    "resource-manager": "haiku",
+    "architect": "opus",
+    "devops": "sonnet",
+    "fe-lead": "sonnet",
+    "be-lead": "sonnet",
+    "developer": "sonnet",
+    "auditor": "sonnet",
+    "researcher": "sonnet",
+    "tester": "haiku",
+    "data-specialist": "sonnet"
+  },
+  "repos": {
+    "fe-lead": [
+      "apps/web"
+    ],
+    "be-lead": [
+      "services/*"
+    ]
+  },
   "devopsPermissions": "read logs and pipelines; changes through the release pipeline",
-  "ceiling": 4
+  "ceiling": 4,
+  "commands": {
+    "test": "",
+    "build": "",
+    "lint": ""
+  }
 }

@@ -7,10 +7,12 @@ A reusable agent team for Claude Code: roles, rules, templates, tools and skills
 ```bash
 cd <workspace>
 git clone https://github.com/huyqnguyen-it/agent-teams.git .team
-.team/init.sh
+claude "Set up the team: follow .team/SETUP.md"
 ```
 
-`init.sh` asks for roles, repositories, models and capacity, suggesting limits from this machine. Add `--yes` for the defaults. Needs Python 3. Rerun it any time: answers are kept and team data is never overwritten. Start a new Claude Code session afterwards, so the agents load.
+Claude reads the workspace, detects the stack, asks a few questions, and runs `init`. Needs Python 3. Rerun it any time: answers are kept and team data is never overwritten. Start a new Claude Code session afterwards, so the agents load.
+
+Without Claude: `.team/init.sh` asks in the terminal, and `.team/init.sh --yes` takes the defaults.
 
 ## What it creates
 
