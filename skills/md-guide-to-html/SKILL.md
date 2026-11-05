@@ -24,6 +24,10 @@ The `.md` stays the source. The HTML is generated, so never edit it by hand: edi
 4. Check that every table row has the same column count as its header. A broken row shows under the wrong header in the HTML too.
 5. Open the page once in a browser.
 
+## Example
+
+`examples/` has a small input and its output: `sample-guide.md`, `sample-guide.config.json`, `sample-guide.html`. Copy the Markdown as a starting point, and open the HTML to see the result.
+
 ## Config
 
 | Key | Use |
