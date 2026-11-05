@@ -20,7 +20,7 @@ FE LEAD  BE LEAD  ARCHITECT  DEVOPS   RESOURCE MANAGER
  DEVELOPER · RESEARCHER · AUDITOR · TESTER · DATA SPECIALIST
 ```
 
-Core roles are PO and Resource Manager. The others are switched on in `team.config.json`.
+Core roles are PO and Resource Manager. The others are switched on in `team.config.json`. Members are always available to hire and are not listed there. With no lead for an area, the PO reviews that work itself; with no Architect, the PO asks the owner about any change that needs a design review.
 
 ## 2. Roles
 
@@ -88,7 +88,9 @@ A lead asks for a skill, not a person. Resource Manager decides:
 - The ceiling is `ceiling` in `team.config.json`; normally 1 or 2 run at once.
 - `.team/tools/capacity-check.sh` reads capacity at no token cost. A follow-up reuse on GREEN needs no Resource Manager agent.
 - YELLOW: no new hires, capped runs only. RED: stop every run.
+- Only the owner can lift YELLOW, for one named task, in their own words. Nobody can lift RED. If capacity stays below GREEN, the PO tells the owner what is using the machine and asks; it does not lower limits itself.
 - A hire that must WAIT: the PO records it on the board and retries at the next step. Do not poll in a loop; a background wait uses `tools/capacity-check.sh` only where the session allows it.
+- No `docs/` folder is fine: briefs then say which conventions to follow from the existing code.
 - Scale the audit to the risk: a small change in one module needs the lead's review, not a hired Auditor. Plans that cross a boundary or change a contract always get one.
 - Heavy commands run one at a time under `flock`. Tests use the project `commands` in `team.config.json`, capped workers where the tool supports them, and throwaway containers.
 
