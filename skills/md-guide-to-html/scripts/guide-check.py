@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Check a Markdown guide before building it. Usage: guide-check.py <guide.md> [--config guide.config.json]
-Reports: table rows with the wrong column count, service sections with no Check line, menu entries and
+Reports: table rows with the wrong column count, variable tables out of alphabetical order, service sections with no Check line, menu entries and
 runbook references to sections that do not exist. Exit code 1 when anything is wrong."""
 import json, pathlib, re, sys
 
@@ -28,6 +28,10 @@ def main():
             cols = lines[i].replace('\\|', '').count('|')
             problems += [f'line {k + 1}: wrong column count' for k in range(i, j)
                          if lines[k].replace('\\|', '').count('|') != cols]
+            if lines[i].split('|')[1].strip() in ('Variable', 'Key'):
+                keys = [lines[k].split('|')[1].strip().strip('`').lower() for k in range(i + 2, j)]
+                if keys != sorted(keys):
+                    problems.append(f'line {i + 1}: variables are not in alphabetical order')
             if i and lines[i - 1].strip():
                 problems.append(f'line {i + 1}: table needs a blank line before it')
             i = j

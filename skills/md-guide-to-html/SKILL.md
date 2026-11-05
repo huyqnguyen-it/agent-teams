@@ -40,6 +40,10 @@ Keep this order. A reader must find what to prepare and what to run first, and w
 | Post-Deploy Operations | Commands with expected results |
 | Change Summary (last) | Everything that changed against the last release, for DevOps to compare with the environment |
 
+## Variables
+
+List variables in alphabetical order in every table whose first column is `Variable` or `Key`, and in the Change Summary lists. `guide-check.py` reports a table out of order, and `guide-md-to-html.py` does not sort for you: fix the Markdown.
+
 ## Change Summary
 
 Generate it, never write it from memory:

@@ -102,8 +102,8 @@ Notes:
 | Variable       | Type   | Default | Required | Description        |
 | -------------- | ------ | ------- | -------- | ------------------ |
 | `DATABASE_URL` | URL    | —       | yes      | Primary store.     |
-| `SEARCH_URL`   | URL    | unset   | no       | Search endpoint.   |
 | `PORT`         | number | `8080`  | no       | HTTP port.         |
+| `SEARCH_URL`   | URL    | unset   | no       | Search endpoint.   |
 
 **Check:**
 
