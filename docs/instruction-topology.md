@@ -1,0 +1,84 @@
+# Instruction topology
+
+Where each instruction lives, who reads it, and which one wins. Read this when an agent misses a rule, or before you add one.
+
+## How instructions reach an agent
+
+```
+                         OWNER MESSAGE
+                              │
+                              ▼
+ Session start ──► CLAUDE.md (workspace)
+                     ├─ workspace rules, docs/
+                     └─ @.team/docs/team-operating-model.md   the team rules
+                              │
+              ┌───────────────┴────────────────┐
+              ▼                                ▼
+       MAIN SESSION = Product Owner      AGENT started by the PO
+       team/status/board.md              .claude/agents/<role>.md   generated
+       team/status/roster.md                   │
+              │                                ├─ core role
+              │ brief                          │    team/roles/<role>/profile.md
+              │ .team/templates/brief.md       │    team/roles/<role>/handover.md
+              └───────────────►                ├─ member
+                                               │    .team/roles/members/<role>.md
+                                               └─ then
+                                                    the brief
+                                                    role skills, team/skills/, .team/skills/
+                                                    team/team.config.json   commands, repositories
+```
+
+Agent definitions load when a session starts: after `init`, start a new session.
+
+## Who reads what
+
+| Reader | Reads | When |
+|---|---|---|
+| Product Owner | `CLAUDE.md`, team rules, `team/status/`, the board | Every session; the board at every step |
+| Lead | Agent file, profile, handover, the plan | When started or resumed |
+| Architect | Agent file, profile, handover, the plan, `docs/` | Before a design review |
+| Resource Manager | Agent file, profile, roster, `team.config.json`, `team.local.json`, capacity check | On each staffing request |
+| DevOps | Agent file, profile, handover, its skills | When started or resumed |
+| Member | Agent file, member profile, the brief, skills | When hired |
+
+## Who writes what
+
+| File | Written by | When |
+|---|---|---|
+| `.team/` | Nobody in a workspace | Only through a template update |
+| `.claude/agents/` | `init` | Generated: do not edit |
+| `CLAUDE.md` | Owner; `init` adds one section | Rarely |
+| `team/team.config.json` | Owner, through setup | When the team changes |
+| `team/roles/<role>/profile.md` | `init`; PO with the owner's OK | Scope changes |
+| `team/status/roster.md` | Resource Manager | On each hire or release |
+| `team/status/board.md` | Product Owner | On each change of status |
+| `handover.md` | That role | Before stopping |
+| `team/log/YYMMDD.md` | Every agent | Before stopping |
+| Skills | The agent that learned it | When a task took more than one try |
+
+## Which one wins
+
+Highest first:
+
+1. The owner's latest message.
+2. The workspace: `CLAUDE.md` and `docs/`, including owner rulings.
+3. The approved plan and its design review.
+4. Team rules: `.team/docs/team-operating-model.md`.
+5. Role profile.
+6. The brief.
+7. Skills.
+
+A lower level never overrides a higher one. If two conflict, stop and ask the level above. Nothing here overrides the permission check: a denied action stops there.
+
+## Where a new rule goes
+
+| Rule is about | Put it in |
+|---|---|
+| One decision by the owner | Workspace `docs/` |
+| Every workspace | Template: `docs/team-operating-model.md` |
+| One role, in every workspace | Template: `roles/<role>/profile.md` |
+| One role, here only | `team/roles/<role>/profile.md` |
+| How to do a repeated task | A skill |
+| One task only | The brief |
+
+State a rule in one place, and link to it from others. A copied rule goes stale.

@@ -34,6 +34,7 @@ Without Claude: `.team/init.sh` asks in the terminal, and `.team/init.sh --yes` 
 |---|---|
 | `docs/team-operating-model.md` | The rules |
 | `docs/multi-server.md` | Running the team on several machines |
+| `docs/instruction-topology.md` | Which file tells which agent what, and which one wins |
 | `roles/` | Role definitions |
 | `templates/` | Brief, design review, plan-complete, work report, skill |
 | `tools/` | `capacity-check.sh` |

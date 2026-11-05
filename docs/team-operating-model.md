@@ -2,6 +2,8 @@
 
 How the agent team works: who does what, who may start whom, when a plan needs a design review, and what "done" means. Workspace settings are in `team/team.config.json`, machine limits in `team/team.local.json`.
 
+Which file tells which agent what, and which one wins: `.team/docs/instruction-topology.md`.
+
 ## 1. Structure
 
 The owner sets direction. The Product Owner (main session) runs the work. Leads deliver, the Architect keeps the system coherent, Resource Manager decides staffing and capacity, DevOps runs the environments. Members are hired per task.
