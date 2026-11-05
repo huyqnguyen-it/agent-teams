@@ -20,8 +20,9 @@ The owner does these steps. Agents never set up credentials.
 1. Install Claude Code and sign in (not needed for remote execution only). A second account needs a seat or API key your plan allows.
 2. Add SSH key access from the main machine, with a name in `~/.ssh/config`.
 3. Clone the workspace repositories, and `.team/`, at the same relative paths.
-4. Run `.team/init.sh --yes` there, so capacity limits suit that machine.
-5. Add it to `team/team.local.json` on the main machine:
+4. Set a git identity there (`git config user.name`, `user.email`). A fresh machine has none, and a worker cannot commit without it.
+5. Run `.team/init.sh --yes` there, so capacity limits suit that machine.
+6. Add it to `team/team.local.json` on the main machine:
 
 ```json
 { "hosts": [
@@ -31,7 +32,7 @@ The owner does these steps. Agents never set up credentials.
 
 `use` values: `exec`, `worker`, `session`.
 
-6. Check it: `ssh pc2 'cd ~/workspace && .team/tools/capacity-check.sh'`.
+7. Check it: `ssh pc2 'cd ~/workspace && .team/tools/capacity-check.sh'`.
 
 ## Choose how to use it
 
@@ -47,12 +48,20 @@ The code must be on that machine: push the feature branch first.
 ### Headless worker: one task, then it exits
 
 ```bash
-ssh pc2 'cd ~/workspace && claude -p "$(cat brief.md)" --model sonnet --max-budget-usd 2 --output-format json'
+scp brief.md pc2:brief.md
+ssh pc2 'cd ~/workspace && timeout 280 ~/.local/bin/claude -p "$(cat ~/brief.md)" --model sonnet --max-budget-usd 2 --permission-mode acceptEdits --output-format json --allowedTools "Bash(git switch:*)" "Bash(git add:*)" "Bash(git commit:*)" "Bash(date:*)" "<test command rule>"'
 ```
 
+- Use the full path: `~/.local/bin` is not on `PATH` in a plain `ssh host 'command'`.
 - Always set a budget, and use `timeout` as well.
-- Headless cannot ask for approval. The owner sets what it may run in that machine's Claude Code settings, and keeps it tight. Never skip permissions.
-- The worker pushes a feature branch; the result is its output and that branch.
+- Headless cannot ask for approval. List what it may run in `--allowedTools`, and keep it tight. Never skip permissions.
+- `Bash(x:*)` matches `x` followed by a space. `Bash(git fetch host:*)` does not match `git fetch host:repo`: write the full command as the rule.
+- A chained command (`a && b`, `a; b`) is denied unless every part is allowed. Tell the worker to run one command per call.
+- The result is the worker's output and its branch. The worker pushes that branch to the shared remote. With no remote the worker can reach, fetch it from the machine you started it from: `git fetch pc2:workspace feat/x:feat/x`.
+
+### A lead on another machine
+
+A lead on one machine can start a worker on another with the same two commands, and take its branch back the same way. It needs SSH to that machine, and rules in its own `--allowedTools` for `scp`, `ssh` and `git fetch`. The names in `~/.ssh/config` belong to each machine: use an address that works from the lead's machine.
 
 ### Remote session: a role that keeps context
 
@@ -69,9 +78,10 @@ Start Claude Code with Remote Control on that machine, in `tmux`, on the same ac
 | Pushing | Members may push feature branches only. Tags and protected branches stay with the PO; branch protection enforces it |
 | Locks | `flock` is per machine |
 | Silence | A session can go quiet with no error: set a timeout, then check its branch and log |
-| Secrets | Each machine holds its own. Nothing goes in `team/` or a brief |
+| Secrets | Each machine holds its own. Nothing goes in `team/` or a brief. Do not mount the main machine's home on a worker machine: an agent there can read its credentials |
 | Permissions | A denial on one machine is not routed through another |
-| Work log | Each machine appends its entry on its branch; the lead merges it |
+| Work log | Each machine appends its entry on its branch; the lead merges it. `init` sets `team/log/*.md` to `merge=union`, so entries from two branches keep both, in no fixed order |
+| Board | Only the PO's session writes it. A worker returns a question in its reply or on its branch, and the PO adds it. A headless worker on another machine does not have the Artifact tools |
 
 ## Check before relying on it
 

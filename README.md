@@ -24,6 +24,7 @@ Without Claude: `.team/init.sh` asks in the terminal, and `.team/init.sh --yes` 
 | `team/team.local.json` | This machine's limits | Ignored |
 | `team/status/`, `team/roles/`, `team/skills/`, `team/tools/`, `team/log/` | Workspace team data | Committed, except handovers |
 | `.claude/agents/`, `.claude/skills/` | Generated | Ignored |
+| `.gitattributes` | Merges `team/log/*.md` by keeping both sides | Committed |
 
 ## Update
 
@@ -47,8 +48,9 @@ No secrets, internal hosts or project details belong here.
 
 - Linux only: `init.py` and `tools/capacity-check.sh` use `/proc`, `free`, `pgrep`. The OOM check reads `journalctl -k`, which an ordinary user may not be allowed to read; then it reports 0.
 - Needs Python 3; `md-guide-to-html` also needs the Python `markdown` package.
-- The team board needs claude.ai access (Artifact tools); without it, the team runs with no board.
-- Proven end to end only on a small Node project, headless (`claude -p`, sonnet): staffing, a build with tests, lead review, work log. See the report for the runs. Not run: the Architect, DevOps, Auditor, Tester and Data Specialist roles; FE Lead; several machines; the board skill; the interactive SETUP.md menus.
+- The team board needs claude.ai access (Artifact tools); without it, the team runs with no board. A headless worker on a second machine did not have those tools (one signed-in VM).
+- Proven end to end only on a small Node project, headless (`claude -p`, sonnet): staffing, a build with tests, lead review, work log. See the report for the runs. Not run: the Architect, DevOps, Auditor, Tester and Data Specialist roles; FE Lead; the board skill; the interactive SETUP.md menus.
+- Several machines: communication proven on two 1 CPU, 2 GB VMs, headless, haiku, on a small Python repo: init on each, capacity check and tests over SSH, one worker per VM with its branch and log entry back on the main machine, a lead on one VM starting a worker on the other and merging its branch. Capacity was not tested. Not run: Remote Control sessions (`ListAgents`, `SendMessage`), `DOCKER_HOST=ssh://`, a shared git remote (branches moved by `git fetch` over SSH), the Resource Manager reading several hosts, a live board from a second machine, `flock` across work on two machines.
 - In a headless run, `.claude/settings.json` rules are ignored until the workspace is trusted, and agents are denied any command not on `--allowedTools`; pass the list on the command line.
 - `init` adds only `Bash(.team/tools/capacity-check.sh)` to `.claude/settings.json`. Git and test commands are not added: whether it may add them is the owner's decision.
 - There are no tests for `init.py`. A skill removed from the template leaves a dangling link in `.claude/skills/` until deleted by hand.

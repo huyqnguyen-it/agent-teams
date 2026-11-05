@@ -137,6 +137,11 @@ def main():
     if missing:
         with ignore.open('a') as f:
             f.write('\n# Agent team\n' + '\n'.join(missing) + '\n')
+    attrs = ROOT / '.gitattributes'  # every machine appends to the same log file: merge by keeping both sides
+    union = 'team/log/*.md merge=union'
+    if union not in (attrs.read_text().splitlines() if attrs.exists() else []):
+        with attrs.open('a') as f:
+            f.write(union + '\n')
     claude = ROOT / 'CLAUDE.md'
     note = '@.team/docs/team-operating-model.md'
     text = claude.read_text() if claude.exists() else ''

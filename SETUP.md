@@ -50,4 +50,4 @@ If the owner plans to use more than one machine, point them to `.team/docs/multi
 
 ## 7. Report
 
-Show the owner: roles, repositories, commands, capacity limits, and the capacity check line. Then say: start a new Claude Code session so the agents load, and commit `team/`, `CLAUDE.md` and `.gitignore`. Do not commit for them.
+Show the owner: roles, repositories, commands, capacity limits, and the capacity check line. Then say: start a new Claude Code session so the agents load, and commit `team/`, `CLAUDE.md`, `.gitignore` and `.gitattributes`. Do not commit for them.
