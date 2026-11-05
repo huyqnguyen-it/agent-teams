@@ -6,6 +6,7 @@ A reusable agent team for Claude Code: roles, rules, templates, tools and skills
 
 ```bash
 cd <workspace>
+# the template lives on an internal GitLab; replace with your own mirror if you have one
 git clone https://github.com/huyqnguyen-it/agent-teams.git .team
 claude "Set up the team: follow .team/SETUP.md"
 ```
@@ -41,3 +42,13 @@ Without Claude: `.team/init.sh` asks in the terminal, and `.team/init.sh --yes` 
 | `skills/` | Generic skills: `md-guide-to-html`, `team-board` |
 
 No secrets, internal hosts or project details belong here.
+
+## Limits and what is untested
+
+- Linux only: `init.py` and `tools/capacity-check.sh` use `/proc`, `free`, `pgrep`. The OOM check reads `journalctl -k`, which an ordinary user may not be allowed to read; then it reports 0.
+- Needs Python 3; `md-guide-to-html` also needs the Python `markdown` package.
+- The team board needs claude.ai access (Artifact tools); without it, the team runs with no board.
+- Proven end to end only on a small Node project, headless (`claude -p`, sonnet): staffing, a build with tests, lead review, work log. See the report for the runs. Not run: the Architect, DevOps, Auditor, Tester and Data Specialist roles; FE Lead; several machines; the board skill; the interactive SETUP.md menus.
+- In a headless run, `.claude/settings.json` rules are ignored until the workspace is trusted, and agents are denied any command not on `--allowedTools`; pass the list on the command line.
+- `init` adds only `Bash(.team/tools/capacity-check.sh)` to `.claude/settings.json`. Git and test commands are not added: whether it may add them is the owner's decision.
+- There are no tests for `init.py`. A skill removed from the template leaves a dangling link in `.claude/skills/` until deleted by hand.

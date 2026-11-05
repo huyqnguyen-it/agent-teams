@@ -29,7 +29,7 @@
     ]
   },
   "devopsPermissions": "read logs and pipelines; changes through the release pipeline",
-  "ceiling": 4,
+  "ceiling": 2,
   "commands": {
     "test": "",
     "build": "",
