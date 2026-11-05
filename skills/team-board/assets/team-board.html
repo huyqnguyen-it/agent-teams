@@ -56,6 +56,10 @@ h2{font-family:var(--f-display);font-size:1.05rem;margin:0;flex:1}
 .qgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:10px;padding-top:10px}
 .q{background:var(--raised);border:1px solid var(--line);border-left:3px solid var(--ask);border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;min-width:0}
 .q h3{margin:0;font-size:.95rem;line-height:1.35;font-weight:600}
+.q.blocking{border-left-color:var(--bad)}.q.later{border-left-color:var(--idle)}
+.mark{align-self:flex-start;margin-bottom:6px}
+.tag.blocking{background:var(--bad-soft);color:var(--bad)}.tag.decision{background:var(--ask-soft);color:var(--ask)}.tag.later{background:var(--idle-soft);color:var(--idle)}
+.blocks{color:var(--bad);font-size:.8rem;font-weight:600}
 .src{color:var(--muted);font-size:.76rem;margin:2px 0 6px}
 .q p{margin:4px 0;color:var(--muted);font-size:.86rem}
 .q p.rec{color:var(--ink)}
@@ -124,6 +128,8 @@ function el(tag,cls,text){const e=document.createElement(tag);if(cls)e.className
 const when=v=>{const d=new Date(v);return isNaN(d)?'':d.toLocaleString([], {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})};
 let db=null,qs=[],filter='All';
 const drafts={};
+const PRIORITY={blocking:0,decision:1,later:2};
+const rank=q=>PRIORITY[q.priority]===undefined?1:PRIORITY[q.priority];
 const pref={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 ['f-plans','f-team','f-log'].forEach(id=>{const f=$(id),h=f.querySelector('.head'),b=f.querySelector('.body');
   const set=o=>{f.classList.toggle('open',o);b.hidden=!o;h.setAttribute('aria-expanded',String(o))};
@@ -131,7 +137,8 @@ const pref={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){retur
 function setWide(w){$('cols').classList.toggle('wide',w);const b=$('toggle');b.textContent=w?'Show sidebar':'Hide sidebar';b.setAttribute('aria-pressed',String(w));pref.set('wide',w)}
 setWide(pref.get('wide')===true);$('toggle').onclick=()=>setWide(!$('cols').classList.contains('wide'));
 function card(q){
-  const c=el('article','q');c.append(el('h3',null,q.title||q.id),el('div','src',[q.session,q.from].filter(Boolean).join(' · ')));
+  const pr=PRIORITY[q.priority]===undefined?'decision':q.priority;const c=el('article','q '+pr);c.append(el('span','tag mark '+pr,pr));c.append(el('h3',null,q.title||q.id),el('div','src',[q.session,q.from].filter(Boolean).join(' · ')));
+  if(q.blocks)c.append(el('div','blocks','Blocks: '+q.blocks));
   if(q.context)c.append(el('p',null,q.context));
   if(q.recommendation){const r=el('p','rec');r.append(el('b',null,'Recommended: '),document.createTextNode(q.recommendation));c.append(r)}
   const send=async(a)=>{btns.forEach(b=>b.disabled=true);try{await db.doc('questions/'+q.id).update({status:'answered',answer:a,answeredAt:new Date().toISOString()});delete drafts[q.id]}catch(e){btns.forEach(b=>b.disabled=false);c.append(el('p',null,'Could not save. Try again.'))}};
@@ -149,7 +156,7 @@ function renderQ(){
   ['All',...sessions].forEach(k=>{const n=k==='All'?open.length:open.filter(q=>(q.session||'Other')===k).length;const b=el('button','chip',k+' '+n);b.type='button';b.setAttribute('aria-pressed',String(k===filter));b.onclick=()=>{filter=k;renderQ()};ch.append(b)});
   ch.hidden=!open.length;
   const box=$('qs');box.replaceChildren();
-  const shown=filter==='All'?open:open.filter(q=>(q.session||'Other')===filter);
+  const shown=(filter==='All'?open:open.filter(q=>(q.session||'Other')===filter)).slice().sort((a,b)=>rank(a)-rank(b));
   if(!open.length)box.append(el('div','empty','Nothing is waiting for you.'));
   shown.forEach(q=>box.append(card(q)));
   $('n-q').textContent=open.length;$('s-q').classList.toggle('hot',open.length>0);

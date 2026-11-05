@@ -11,6 +11,6 @@
     { "op": "set", "collection": "questions", "doc_id": "first-question",
       "data": { "session": "Team setup", "from": "Product Owner", "title": "Example question: which option?",
                 "context": "One or two lines of background.", "recommendation": "Option A, because it is simpler",
-                "options": ["Option A", "Option B"], "status": "open", "createdAt": "2026-01-15T09:01:00+07:00" } }
+                "options": ["Option A", "Option B"], "status": "open", "priority": "blocking", "blocks": "First plan", "createdAt": "2026-01-15T09:01:00+07:00" } }
   ]
 }
