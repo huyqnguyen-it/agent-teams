@@ -141,7 +141,7 @@ Owner request → PO priority → Lead plan → crosses a boundary? → Design r
 
 ## 8. Work log
 
-Every agent appends to `team/log/YYMMDD.md` before stopping, using `.team/templates/work-report.md`: what it did, what it decided and why, evidence, status. A task with no entry is not done. No secrets.
+Every agent appends to `team/log/YYMMDD.md` before stopping, using `.team/templates/work-report.md`: what it did, what it decided and why, evidence, status. A task with no entry is not done. The PO is an agent too: its last step in every session is its own entry (what it staffed, decided, and the state of the work) and an update of `team/status/board.md`. No secrets.
 
 ## 9. Talking to the owner
 
