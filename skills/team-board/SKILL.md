@@ -43,6 +43,21 @@ A private artifact page. Its data lives in the artifact's database, so updating 
 - Every write needs `if_version` for an existing document. On a mismatch, read it again first: the owner may have just answered.
 - Use `batch` for more than a couple of writes.
 
+## Working with the owner
+
+The board is for decisions, not chat. Clicking an answer costs almost no tokens; every chat message resends the session's whole conversation.
+
+| Owner needs to | Use |
+|---|---|
+| Decide something | The board: click an answer |
+| Know something is waiting | Push notification, for blockers only |
+| See status | The board: plans, team, log |
+| Discuss or change direction | Remote Control or the terminal |
+
+- An answer does not wake an idle session. After answering, the owner sends one short message, such as "check board".
+- Do not add a chat box to the page: it costs the same, or answers without the session's context.
+- When a PO session grows large, start a fresh one from `team/status/board.md`.
+
 ## Questions
 
 - Only the PO adds a question, and only a real decision. If it only restates your recommendation and is local and reversible, apply it and report it.
