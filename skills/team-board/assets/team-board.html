@@ -194,7 +194,7 @@ function renderQ(){
   const lists={open,pend:ans.filter(q=>!q.handled).sort(byTime),done:ans.filter(q=>q.handled).sort(byTime)};
   if(!lists[tab])tab='open';
   const tb=$('tabs');tb.replaceChildren();
-  [['open','Open'],['pend','With PO'],['done','Done']].forEach(([k,label])=>{const b=el('button','tab'+(k==='open'&&open.length?' hot':''),label);b.type='button';b.setAttribute('role','tab');b.setAttribute('aria-selected',String(k===tab));b.append(el('span','n',String(lists[k].length)));b.onclick=()=>{tab=k;pref.set('qtab',k);renderQ()};tb.append(b)});
+  [['open','Open'],['pend','In progress'],['done','Done']].forEach(([k,label])=>{const b=el('button','tab'+(k==='open'&&open.length?' hot':''),label);b.type='button';b.setAttribute('role','tab');b.setAttribute('aria-selected',String(k===tab));b.append(el('span','n',String(lists[k].length)));b.onclick=()=>{tab=k;pref.set('qtab',k);renderQ()};tb.append(b)});
   const pool=lists[tab],sessions=[...new Set(pool.map(q=>q.session||'Other'))].sort();
   if(filter!=='All'&&!sessions.includes(filter))filter='All';
   const ch=$('chips');ch.replaceChildren();ch.hidden=sessions.length<2;  // session filter: own row under the header, so many pills never push the tabs
@@ -203,7 +203,7 @@ function renderQ(){
   const box=$('qs');box.replaceChildren();box.className=tab==='open'?'qgrid':'qlist';
   if(!shown.length)box.append(el('div','empty',{open:'Nothing is waiting for you.',pend:'No answer is waiting for the PO.',done:'Nothing handled yet.'}[tab]));
   if(tab==='open')shown.slice().sort((a,b)=>rank(a)-rank(b)).forEach(q=>box.append(card(q)));
-  else shown.forEach(q=>box.append(ansRow(q,tab==='pend'?'with PO':'')));
+  else shown.forEach(q=>box.append(ansRow(q,tab==='pend'?'in progress':'')));
   $('n-q').textContent=open.length;$('s-q').classList.toggle('hot',open.length>0);
   $('sum').textContent=open.length?(open.length+' to answer'):'all answered'}
 function rows(id,list,fn,empty){const b=$(id);b.replaceChildren();if(!list.length)b.append(el('div','empty',empty));list.forEach(x=>b.append(fn(x)))}
