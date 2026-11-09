@@ -35,7 +35,7 @@ When the template's page changes (for example, the Issues form), republish it to
 
 | Collection | Document fields |
 |---|---|
-| `questions` | `session`, `from`, `title`, `context` (lines separated by `\n`; `1. ` and `- ` lines render as lists), `recommendation`, `options` (list), `status` (`open`, `answered`), `priority` (`blocking`, `decision`, `later`), `blocks` (what it holds up), `createdAt`; on answer: `answer`, `answeredAt` |
+| `questions` | `session`, `from`, `title`, `context` (lines separated by `\n`; `1. ` and `- ` lines render as lists), `recommendation`, `options` (list), `status` (`open`, `answered`), `priority` (`blocking`, `decision`, `later`), `blocks` (what it holds up), `createdAt`; on answer: `answer`, `answeredAt`; the PO adds `handled: true` and an optional `outcome` (one line: what it did) once it has acted |
 | `agents` | `role`, `model`, `state` (`working`, `idle`), `task`, `order` |
 | `requests` | Written by the page when the owner sends an issue: `title`, `detail`, `kind` (`task`, `bug`, `requirement`, `docs`, `ops`), `priority` (`normal`, `urgent`, `later`), `status` (`sent`), `createdAt`. The PO adds: `status` (`filed`, `dropped`), `ticket`, `ticketState`, `reason` (why dropped) |
 | `plans` | `title`, `ticket`, `lead`, `status`, `next` |
@@ -44,7 +44,7 @@ When the template's page changes (for example, the Issues form), republish it to
 
 ## Keep it current
 
-- **Read `questions` at every step.** An answer does not wake a session: the board is useless if nobody reads it. Keep a `status == answered` read in your routine.
+- **Read `questions` at every step.** An answer does not wake a session: the board is useless if nobody reads it. Keep a `status == answered` read in your routine. An answered card stays under **Answered, not handled yet** until you set `handled: true`; an answer that is itself a question stays there until you answer it with a new card.
 - **Read `requests` with `status == sent` at every step too.** File each as a ticket before any planning: `ticket.py new --title <title> --kind <kind> --by owner --source board:<doc id>` with the detail as the body (`--source` makes a second filing impossible). Then update the request: `status: filed`, `ticket`, `ticketState: triage`. Change `ticketState` as the ticket moves. A request that is not work (a question, a duplicate) gets `status: dropped` and a `reason`.
 - Update `agents` when one starts or stops, `plans` when status changes, and `log` with short entries.
 - Every write needs `if_version` for an existing document. On a mismatch, read it again first: the owner may have just answered.

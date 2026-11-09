@@ -85,6 +85,8 @@ textarea{flex:1;min-width:0;font:inherit;font-size:.84rem;padding:5px 8px;border
 .next{font-size:.8rem;overflow-wrap:anywhere}
 .log time{font-family:var(--f-mono);font-size:.74rem;color:var(--muted);white-space:nowrap}
 .ans{padding:0 14px 10px}
+.pend{padding:4px 14px 10px;border-top:1px solid var(--line)}
+.pend h3{font-size:.84rem;margin:8px 0 4px;color:var(--accent)}
 .ans summary{cursor:pointer;color:var(--muted);font-size:.84rem;padding:8px 0}
 .nf{display:flex;flex-direction:column;gap:6px;padding:8px 0 10px;border-bottom:1px solid var(--line)}
 .nf input,.nf select{font:inherit;font-size:.84rem;padding:5px 8px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink);min-width:0}
@@ -119,6 +121,7 @@ textarea{flex:1;min-width:0;font:inherit;font-size:.84rem;padding:5px 8px;border
       <header><h2 id="h-q">Waiting for you</h2><span class="count" id="sum">Connecting…</span></header>
       <div class="chips" id="chips"></div>
       <div class="body"><div class="qgrid" id="qs"></div></div>
+      <section class="pend" id="pend-box" hidden aria-labelledby="pend-h"><h3 id="pend-h">Answered, not handled yet</h3><div id="pend"></div></section>
       <details class="ans"><summary id="done-s">Answered</summary><div id="done"></div></details>
     </section>
   </div>
@@ -191,8 +194,13 @@ function renderQ(){
   shown.forEach(q=>box.append(card(q)));
   $('n-q').textContent=open.length;$('s-q').classList.toggle('hot',open.length>0);
   $('sum').textContent=sessions.length+(sessions.length===1?' session':' sessions');
-  $('done-s').textContent='Answered ('+ans.length+')';
-  const d=$('done');d.replaceChildren();ans.forEach(q=>{const r=el('div','row'),b=el('div');b.append(el('b',null,q.title||q.id),el('div','sub',q.answer||''));r.append(b);d.append(r)})}
+  /* An answer stays in view until the PO marks it handled (handled: true, optional outcome). */
+  const pend=ans.filter(q=>!q.handled).sort((a,b)=>String(b.answeredAt).localeCompare(String(a.answeredAt))),done=ans.filter(q=>q.handled);
+  const ansRow=(q,tag)=>{const r=el('div','row'),b=el('div');b.append(el('b',null,q.title||q.id),el('div','sub','You: '+(q.answer||'')));if(q.outcome)b.append(el('div','next','PO: '+q.outcome));r.append(b);if(tag)r.append(el('span','tag sent',tag));return r};
+  $('pend-box').hidden=!pend.length;$('pend-h').textContent='Answered, not handled yet ('+pend.length+')';
+  const pd=$('pend');pd.replaceChildren();pend.forEach(q=>pd.append(ansRow(q,'with PO')));
+  $('done-s').textContent='Answered and handled ('+done.length+')';
+  const d=$('done');d.replaceChildren();done.forEach(q=>d.append(ansRow(q)))}
 function rows(id,list,fn,empty){const b=$(id);b.replaceChildren();if(!list.length)b.append(el('div','empty',empty));list.forEach(x=>b.append(fn(x)))}
 function agentRow(a){const r=el('div','row'),b=el('div');b.append(el('b',null,a.role||a.id),el('div','sub',[a.model,a.task].filter(Boolean).join(' · ')));r.append(b,el('span','tag '+(a.state==='working'?'working':'idle'),a.state||'idle'));return r}
 function planRow(p){const r=el('div','row'),b=el('div');b.append(el('b',null,p.title||p.id),el('div','sub',[p.ticket,p.lead,p.status].filter(Boolean).join(' · ')));if(p.next)b.append(el('div','next','Next: '+p.next));r.append(b);return r}
