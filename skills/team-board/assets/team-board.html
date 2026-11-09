@@ -56,7 +56,8 @@ h2{font-family:var(--f-display);font-size:1.05rem;margin:0;flex:1}
 .tab{border:0;background:none;padding:4px 10px;font-size:.8rem;color:var(--muted)}
 .tab[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 0 0 1px var(--line)}
 .tab .n{font-family:var(--f-mono);margin-left:5px}.tab.hot .n{color:var(--ask);font-weight:600}
-.chips{display:flex;flex-wrap:wrap;gap:6px;flex:1;min-width:0}
+.chips{display:flex;flex-wrap:wrap;gap:6px;min-width:0;padding:8px 14px;border-bottom:1px solid var(--line)}
+.chips[hidden]{display:none}
 .qlist{padding-top:4px}
 .chip{font-size:.78rem;padding:3px 10px;border-radius:999px}
 .chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
@@ -123,8 +124,8 @@ textarea{flex:1;min-width:0;font:inherit;font-size:.84rem;padding:5px 8px;border
     <section class="panel" aria-labelledby="h-q">
       <header class="qhead"><h2 id="h-q">Waiting for you</h2>
         <div class="tabs" role="tablist" aria-label="Questions" id="tabs"></div>
-        <div class="chips" id="chips" aria-label="Session"></div>
-        <span class="count" id="sum">Connecting…</span></header>
+        <span class="count" id="sum" style="margin-left:auto">Connecting…</span></header>
+      <div class="chips" id="chips" aria-label="Session" hidden></div>
       <div class="body"><div class="qgrid" id="qs" role="tabpanel" aria-labelledby="h-q"></div></div>
     </section>
   </div>
@@ -196,7 +197,7 @@ function renderQ(){
   [['open','Open'],['pend','With PO'],['done','Done']].forEach(([k,label])=>{const b=el('button','tab'+(k==='open'&&open.length?' hot':''),label);b.type='button';b.setAttribute('role','tab');b.setAttribute('aria-selected',String(k===tab));b.append(el('span','n',String(lists[k].length)));b.onclick=()=>{tab=k;pref.set('qtab',k);renderQ()};tb.append(b)});
   const pool=lists[tab],sessions=[...new Set(pool.map(q=>q.session||'Other'))].sort();
   if(filter!=='All'&&!sessions.includes(filter))filter='All';
-  const ch=$('chips');ch.replaceChildren();
+  const ch=$('chips');ch.replaceChildren();ch.hidden=sessions.length<2;  // session filter: own row under the header, so many pills never push the tabs
   if(sessions.length>1)['All',...sessions].forEach(k=>{const n=k==='All'?pool.length:pool.filter(q=>(q.session||'Other')===k).length;const b=el('button','chip',k+' '+n);b.type='button';b.setAttribute('aria-pressed',String(k===filter));b.onclick=()=>{filter=k;renderQ()};ch.append(b)});
   const shown=filter==='All'?pool:pool.filter(q=>(q.session||'Other')===filter);
   const box=$('qs');box.replaceChildren();box.className=tab==='open'?'qgrid':'qlist';
