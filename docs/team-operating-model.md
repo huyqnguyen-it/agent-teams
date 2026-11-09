@@ -104,7 +104,7 @@ TASK DONE developer-1
 PLAN COMPLETE <plan> | PLAN PARTIAL <plan>: <what is left>
 ```
 
-A lead reports PLAN COMPLETE only when: every phase is done; tests pass on final code; the Auditor accepted and review items are closed; docs are updated; every task has a log entry; every draft skill from the plan is accepted or deleted (§11); nothing is left unresolved.
+A lead reports PLAN COMPLETE only when: every phase is done; tests pass on final code and the CI pipeline is green on the branch; the Auditor accepted and review items are closed; docs are updated; every task has a log entry; every draft skill from the plan is accepted or deleted (§11); nothing is left unresolved.
 
 ### Cost
 
@@ -126,8 +126,13 @@ The role is permanent; the agent behind it is not.
 ```
 Owner request, or a ticket (§6 Tickets) → PO priority → Lead plan → crosses a boundary? → Design review
 → Resource Manager: hire or reuse → Member builds on a branch, with tests
-→ Lead reviews → Auditor → PLAN COMPLETE → PO reports → Owner GO → PO merges and tags
+→ Lead reviews → Auditor → CI green → PLAN COMPLETE → PO reports → Owner GO → PO merges and tags
+→ DevOps (or the lead) verifies the release → PO closes → Observer watches the first hour
 ```
+
+How the loop starts, where it waits for the owner, and the scheduled check: `.team/docs/work-loop.md`.
+
+**Retry limit.** A task gets at most `maxRounds` rounds (`team.config.json`, default 3). A round fails when the lead's review or the Auditor sends the work back, or the member reports BLOCKED; the lead records each on the ticket (`ticket.py comment <id> --note "round N failed: <why>"`). After the last failed round the lead stops the task and reports it; the PO moves the ticket to `waiting` and asks the owner on the board, with the evidence. No further round without the owner's answer. A fresh hire after a failure (§5) does not reset the count.
 
 ### Tickets
 
@@ -152,12 +157,17 @@ Every piece of work that does not come straight from the owner is a ticket, so t
 | 3 | Create the ticket: summary, evidence, source ID, suggested owner | Observer (the PO for a request) | `ticket.py new` | `triage` |
 | 4 | Task or not | PO | `ticket.py move <id> accepted --owner <lead>` | `accepted`; `waiting` (a requirement: the owner decides new scope, asked on the board); `rejected` with the reason |
 | 5 | Read and accept the work, or return it | Lead | `move <id> in-progress --plan <plan>`, or `move <id> triage --note <why>` | `in-progress` |
-| 6 | Resolve, with evidence | Lead, at PLAN COMPLETE | `move <id> resolved --note <commit, tests>` | `resolved` |
-| 7 | Close | PO, after the owner's GO and the merge | `move <id> closed` | `closed` |
+| 6 | Resolve, with evidence: tests and the CI pipeline green on the branch | Lead, at PLAN COMPLETE | `move <id> resolved --note <commit, pipeline>` | `resolved` |
+| 7 | Merge and tag | PO, after the owner's GO | `comment <id> --note "merged <sha>"` | `resolved` |
+| 8 | Verify the release: pipeline after merge, deploy, health | DevOps; the lead when there is no DevOps role | `comment <id> --note "release verified: <pipeline, deploy>"`; failed: `move <id> in-progress --note <evidence>` (a failed round) | `resolved`, or back to `in-progress` |
+| 9 | Close, then watch | PO: closes after step 8, then hires an Observer once to compare the first hour after release with before | `move <id> closed` | `closed` |
 
+- **The lead owns the final result.** Its plan is not over at PLAN COMPLETE: it stays responsible until step 8 passes, and does step 8 itself when there is no DevOps role. Between steps it is idle at no cost; the PO resumes it with the result.
+- **CI results come in without waiting.** No agent waits on a pipeline. A source `check` (`.team/tools/gitlab-pipelines.py check <project>...` for GitLab CI) reports each finished pipeline once; the PO passes a branch result to its lead and a release result to DevOps, or to the lead. Anyone reads a result with `gitlab-pipelines.py show <project> <ref>`. The owner connects GitLab once per machine (`SETUP.md`, GitLab CI); agents never see the token.
+- An Observer's ticket about a problem after a release names the release ticket in `--source`, so the problem traces back to the change.
 - A closed or rejected ticket leaves `team/tickets/` for `team/tickets/archive/YYMM/`; it is never edited again, and git keeps it. Only open tickets stay in view.
 - `ticket.py` refuses a move outside this flow. Each move and `comment` is added to the ticket's history with who and when.
-- **Every work session**, the PO starts with `ticket.py list --state triage` and `--state resolved`, and each lead with `ticket.py list --owner <role>`. A plan names its ticket on the board.
+- **Every work session**, and every scheduled check (`.team/docs/work-loop.md`), the PO starts with `ticket.py list --state triage` and `--state resolved`, and each lead with `ticket.py list --owner <role>`. A plan names its ticket on the board.
 - A ticket never holds secrets or personal data: IDs, counts and the query used, not values.
 
 ### Signals
@@ -166,7 +176,9 @@ Sources are listed in `team.config.json`, each with a read-only command the owne
 
 ```json
 "sources": [
-  {"name": "app-traces", "kind": "telemetry", "read": "<command that prints new errors or slow spans>"}
+  {"name": "app-traces", "kind": "telemetry", "read": "<command that prints new errors or slow spans>",
+   "check": "<optional cheap command that prints one line only when something is new>"},
+  {"name": "gitlab-ci", "kind": "ci", "check": ".team/tools/gitlab-pipelines.py check group/service-a group/web"}
 ]
 ```
 

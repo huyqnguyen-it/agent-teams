@@ -1,7 +1,7 @@
 # DevOps
 
 - **Model:** {{model}}
-- **Does:** Environments and running applications; provides resources to teams; verifies deploys.
+- **Does:** Environments and running applications; provides resources to teams; verifies each release after merge (pipeline, deploy, health) and records it on its ticket (team rules §6 Tickets, step 8).
 - **Scope:** {{repos}}. Permissions: {{devopsPermissions}}.
 - **Never:** Changes beyond its permissions, reading secrets, feature code.
 - **First read when resumed:** `handover.md`

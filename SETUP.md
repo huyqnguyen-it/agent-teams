@@ -44,10 +44,33 @@ It creates `team/`, generates `.claude/agents/`, links skills, updates `.gitigno
 
 If the owner wants a board and has none, follow `.team/skills/team-board/SKILL.md`, then save its URL as `boardUrl` in `team/team.local.json`. This needs claude.ai access: if the tools are missing, say so and continue without one.
 
-## 6. More machines
+## 6. GitLab CI
+
+If the workspace has `.gitlab-ci.yml`, or the owner says it uses GitLab CI, connect the team to the pipeline results. Never ask for the token in the chat and never handle it yourself: whatever is pasted here stays in the session.
+
+1. Check first: run `.team/tools/gitlab-pipelines.py whoami`. If it prints "connected as", skip to step 4.
+2. Tell the owner, in these words or close to them:
+
+   > The team reads pipeline results from GitLab with a personal access token that can only read. Please:
+   > 1. In GitLab, open your avatar → **Edit profile** → **Access tokens** → **Add new token**.
+   > 2. Name: `agent-team-<this machine>`. Expiry: a date you will renew (GitLab's limit is one year). Scope: **read_api** only, nothing else.
+   > 3. Create it and copy the token (it starts with `glpat-`). GitLab shows it once.
+   > 4. In **your own terminal** (not in this chat), in this workspace, run: `.team/tools/gitlab-setup.sh`
+   >    It asks for the GitLab URL (for example `https://gitlab.example.com`), the token (hidden as you type), and a CA certificate file only if your GitLab uses a self-signed certificate. It checks the connection and saves both to `~/.config/agent-team/gitlab.env`, readable only by you.
+   > 5. Tell me when it says "connected as".
+   >
+   > A project or group access token with `read_api` works too, and does not depend on one person's account.
+3. Run `.team/tools/gitlab-pipelines.py whoami` again to confirm.
+4. Ask which GitLab projects the team should follow (paths like `group/service`; offer the repositories you found), and add the source to `sources` in `team/team.config.json`:
+   `{"name": "gitlab-ci", "kind": "ci", "check": ".team/tools/gitlab-pipelines.py check group/service-a group/web"}`
+5. Run its `check` once: the first run records history and prints nothing; later runs print each finished pipeline once.
+
+The token is per machine: every machine that runs the scheduled check or a lead repeats step 2 there.
+
+## 7. More machines
 
 If the owner plans to use more than one machine, point them to `.team/docs/multi-server.md`. Do not set up other machines yourself.
 
-## 7. Report
+## 8. Report
 
-Show the owner: roles, repositories, commands, capacity limits, and the capacity check line. Then say: start a new Claude Code session so the agents load, and commit `team/`, `CLAUDE.md`, `.gitignore` and `.gitattributes`. Do not commit for them.
+Show the owner: roles, repositories, commands, capacity limits, the capacity check line, and the GitLab connection (the `whoami` line, or "not connected"). Then say: start a new Claude Code session so the agents load, and commit `team/`, `CLAUDE.md`, `.gitignore` and `.gitattributes`. Do not commit for them.

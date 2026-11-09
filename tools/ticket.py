@@ -13,7 +13,7 @@ each action runs that owner-approved command instead (values are shell-quoted).
   ticket.py comment ID --by AGENT --note N
 
 Flow (team operating model §6, Tickets): triage -> accepted | waiting | rejected;
-waiting -> accepted | rejected; accepted -> in-progress | triage; in-progress -> resolved | triage;
+waiting -> accepted | rejected; accepted -> in-progress | triage; in-progress -> resolved | triage | waiting;
 resolved -> closed | in-progress. Closed and rejected tickets move to team/tickets/archive/YYMM/.
 Exit codes: 0 ok, 2 bad input, 3 an open ticket already has this source.
 """
@@ -23,7 +23,7 @@ DIR = pathlib.Path(os.environ.get('TEAM_TICKETS', 'team/tickets'))
 CFG = pathlib.Path(os.environ.get('TEAM_CONFIG', 'team/team.config.json'))
 KINDS = ('bug', 'requirement', 'docs', 'ops', 'task')
 FLOW = {'triage': {'accepted', 'waiting', 'rejected'}, 'waiting': {'accepted', 'rejected'},
-        'accepted': {'in-progress', 'triage'}, 'in-progress': {'resolved', 'triage'},
+        'accepted': {'in-progress', 'triage'}, 'in-progress': {'resolved', 'triage', 'waiting'},
         'resolved': {'closed', 'in-progress'}}
 DONE = {'closed', 'rejected'}
 FIELDS = ('id', 'title', 'kind', 'state', 'source', 'owner', 'plan', 'created')

@@ -22,7 +22,8 @@ The owner does these steps. Agents never set up credentials.
 3. Clone the workspace repositories, and `.team/`, at the same relative paths.
 4. Set a git identity there (`git config user.name`, `user.email`). A fresh machine has none, and a worker cannot commit without it.
 5. Run `.team/init.sh --yes` there, so capacity limits suit that machine.
-6. Add it to `team/team.local.json` on the main machine:
+6. If it runs the scheduled check or a lead that tracks GitLab CI: run `.team/tools/gitlab-setup.sh` there, in a terminal on that machine (`SETUP.md`, GitLab CI). Use a token for that machine, so it can be revoked alone.
+7. Add it to `team/team.local.json` on the main machine:
 
 ```json
 { "hosts": [
@@ -32,7 +33,7 @@ The owner does these steps. Agents never set up credentials.
 
 `use` values: `exec`, `worker`, `session`.
 
-7. Check it: `ssh pc2 'cd ~/workspace && .team/tools/capacity-check.sh'`.
+8. Check it: `ssh pc2 'cd ~/workspace && .team/tools/capacity-check.sh'`.
 
 ## Choose how to use it
 

@@ -39,5 +39,6 @@
   "sources": [],
   "tracker": {
     "provider": "markdown"
-  }
+  },
+  "maxRounds": 3
 }

@@ -16,5 +16,23 @@
         "worker"
       ]
     }
-  ]
+  ],
+  "schedule": {
+    "enabled": false,
+    "allowedTools": [
+      "Read",
+      "Write",
+      "Edit",
+      "Glob",
+      "Grep",
+      "Agent",
+      "Bash(.team/tools/capacity-check.sh)",
+      "Bash(.team/tools/ticket.py:*)",
+      "Bash(.team/tools/journal-archive.sh:*)",
+      "Bash(git status:*)",
+      "Bash(git log:*)",
+      "Bash(git diff:*)",
+      "Bash(.team/tools/gitlab-pipelines.py:*)"
+    ]
+  }
 }

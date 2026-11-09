@@ -71,13 +71,15 @@ def main():
     cfg.setdefault('commands', example.get('commands', {}))
     cfg.setdefault('sources', example.get('sources', []))
     cfg.setdefault('tracker', example.get('tracker', {'provider': 'markdown'}))
+    cfg.setdefault('maxRounds', example.get('maxRounds', 3))
     cfg['models'] = {**example['models'], **cfg['models']}  # a role added to the template gets its default model
     cap = {**detect_capacity(), **local.get('capacity', {})}
     for key in cap:
         cap[key] = float(ask(f'Capacity {key}', cap[key]))
     cap['stopDiskPct'] = int(cap['stopDiskPct'])
     local = {'capacity': cap, 'boardUrl': ask('Team board URL (empty for none)', local.get('boardUrl', '')),
-             'hosts': local.get('hosts', [])}
+             'hosts': local.get('hosts', []),
+             'schedule': local.get('schedule', {'enabled': False, 'allowedTools': []})}
 
     TEAM.mkdir(exist_ok=True)
     (TEAM / 'team.config.json').write_text(json.dumps(cfg, indent=2) + '\n')
@@ -144,14 +146,17 @@ def main():
     settings = ROOT / '.claude' / 'settings.json'
     data = load(settings, {})
     allow = data.setdefault('permissions', {}).setdefault('allow', [])
-    rules = ['Bash(.team/tools/capacity-check.sh)', 'Bash(.team/tools/journal-archive.sh:*)', 'Bash(.team/tools/ticket.py:*)']
-    if any(r not in allow for r in rules):
+    rules = ['Bash(.team/tools/capacity-check.sh)', 'Bash(.team/tools/journal-archive.sh:*)', 'Bash(.team/tools/ticket.py:*)', 'Bash(.team/tools/scheduled-check.sh)', 'Bash(.team/tools/gitlab-pipelines.py:*)']
+    deny = data['permissions'].setdefault('deny', [])
+    secret = 'Read(~/.config/agent-team/**)'  # the owner's GitLab token: tools use it, agents never read it
+    if any(r not in allow for r in rules) or secret not in deny:
         allow.extend(r for r in rules if r not in allow)
+        deny.extend([secret] if secret not in deny else [])
         settings.write_text(json.dumps(data, indent=2) + '\n')
 
     ignore = ROOT / '.gitignore'
     have = ignore.read_text().splitlines() if ignore.exists() else []
-    want = ['.team/', '.claude/', 'team/team.local.json', 'team/**/handover.md', 'team/**/.archive.lock']
+    want = ['.team/', '.claude/', 'team/team.local.json', 'team/**/handover.md', 'team/**/.archive.lock', 'team/.scheduled.lock', 'team/scheduled.out', 'team/.ci-seen.json']
     missing = [w for w in want if w not in have]
     if missing:
         with ignore.open('a') as f:
