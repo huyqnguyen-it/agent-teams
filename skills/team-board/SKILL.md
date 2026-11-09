@@ -1,6 +1,6 @@
 ---
 name: team-board
-description: Create and maintain the team board, a private live page showing questions for the owner by session, who is working, plans and the work log. Use when setting up a team, when a workspace has no board, or when the owner must be asked something.
+description: Create and maintain the team board, a private live page showing questions for the owner by session, issues the owner sends, who is working, plans and the work log. Use when setting up a team, when a workspace has no board, or when the owner must be asked something.
 ---
 
 # Team board
@@ -15,6 +15,7 @@ A private artifact page. Its data lives in the artifact's database, so updating 
 ```json
 { "db": { "rules": [
   { "path": "questions", "read": "view", "write": "admin" },
+  { "path": "requests", "read": "view", "write": "admin" },
   { "path": "agents", "read": "view", "write": "admin" },
   { "path": "plans", "read": "view", "write": "admin" },
   { "path": "log", "read": "view", "write": "admin" },
@@ -26,19 +27,25 @@ A private artifact page. Its data lives in the artifact's database, so updating 
 4. Fill it with an ArtifactData `batch`, in the shape of `assets/seed.example.json`, using real data only. Remove the examples.
 5. Read one collection back, and ask the owner to confirm the page shows and a button saves.
 
+### Update an existing board
+
+When the template's page changes (for example, the Issues form), republish it to the same `boardUrl` from a fresh copy of `assets/team-board.html`, with the full `capabilities` above: a capabilities object replaces the stored one, so a rule left out is removed. The data stays.
+
 ## Collections
 
 | Collection | Document fields |
 |---|---|
 | `questions` | `session`, `from`, `title`, `context` (lines separated by `\n`; `1. ` and `- ` lines render as lists), `recommendation`, `options` (list), `status` (`open`, `answered`), `priority` (`blocking`, `decision`, `later`), `blocks` (what it holds up), `createdAt`; on answer: `answer`, `answeredAt` |
 | `agents` | `role`, `model`, `state` (`working`, `idle`), `task`, `order` |
-| `plans` | `title`, `lead`, `status`, `next` |
+| `requests` | Written by the page when the owner sends an issue: `title`, `detail`, `kind` (`task`, `bug`, `requirement`, `docs`, `ops`), `priority` (`normal`, `urgent`, `later`), `status` (`sent`), `createdAt`. The PO adds: `status` (`filed`, `dropped`), `ticket`, `ticketState`, `reason` (why dropped) |
+| `plans` | `title`, `ticket`, `lead`, `status`, `next` |
 | `log` | `at`, `agent`, `task`, `did`, `decided` |
 | `meta/system` | `line`: the latest capacity check line |
 
 ## Keep it current
 
 - **Read `questions` at every step.** An answer does not wake a session: the board is useless if nobody reads it. Keep a `status == answered` read in your routine.
+- **Read `requests` with `status == sent` at every step too.** File each as a ticket before any planning: `ticket.py new --title <title> --kind <kind> --by owner --source board:<doc id>` with the detail as the body (`--source` makes a second filing impossible). Then update the request: `status: filed`, `ticket`, `ticketState: triage`. Change `ticketState` as the ticket moves. A request that is not work (a question, a duplicate) gets `status: dropped` and a `reason`.
 - Update `agents` when one starts or stops, `plans` when status changes, and `log` with short entries.
 - Every write needs `if_version` for an existing document. On a mismatch, read it again first: the owner may have just answered.
 - Use `batch` for more than a couple of writes.
@@ -50,6 +57,7 @@ The board is for decisions, not chat. Clicking an answer costs almost no tokens;
 | Owner needs to | Use |
 |---|---|
 | Decide something | The board: click an answer |
+| Give the team work | The board: Issues, Send. The PO files it as a ticket |
 | Know something is waiting | Push notification, for blockers only |
 | See status | The board: plans, team, log |
 | Discuss or change direction | Remote Control or the terminal |

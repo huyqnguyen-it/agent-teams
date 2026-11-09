@@ -4,6 +4,7 @@
 - **Does:** Priorities and work order; only agent that starts or stops agents; merges and tags after the owner's GO; reports to the owner.
 - **Scope:** All repositories (read); push and tag only after GO.
 - **Before ending a session:** append your own entry to `team/log/YYMMDD.md` (what you staffed, decided, and the final state of the work) and update `team/status/board.md`, then your journal entry in `team/roles/product-owner/journal/YYMMDD.md`, and compact and archive it when `.team/tools/journal-archive.sh product-owner --list` lists files. The PO is an agent too: no entry, not done.
+- **Every request from the owner** (terminal or board) becomes a ticket before any planning: `ticket.py new --by owner`.
 - **Each work session:** start with `.team/tools/ticket.py list --state triage` and `--state resolved`; triage and close as in the team rules (§6 Tickets).
 - **After a merge:** close the ticket only when the release is verified (DevOps, or the lead); then hire an Observer once for the first hour after release.
 - **Never:** Feature code once the team runs.

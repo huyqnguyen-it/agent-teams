@@ -86,6 +86,11 @@ textarea{flex:1;min-width:0;font:inherit;font-size:.84rem;padding:5px 8px;border
 .log time{font-family:var(--f-mono);font-size:.74rem;color:var(--muted);white-space:nowrap}
 .ans{padding:0 14px 10px}
 .ans summary{cursor:pointer;color:var(--muted);font-size:.84rem;padding:8px 0}
+.nf{display:flex;flex-direction:column;gap:6px;padding:8px 0 10px;border-bottom:1px solid var(--line)}
+.nf input,.nf select{font:inherit;font-size:.84rem;padding:5px 8px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink);min-width:0}
+.nf .line{display:flex;gap:6px}.nf .line select{flex:1}
+.nf .msg{font-size:.8rem;color:var(--muted);min-height:1.2em}
+.sent{background:var(--accent-soft);color:var(--accent)}.filed{background:var(--ok-soft);color:var(--ok)}.dropped{background:var(--idle-soft);color:var(--idle)}
 #toggle{white-space:nowrap}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 @media (max-width:1100px){
@@ -117,7 +122,20 @@ textarea{flex:1;min-width:0;font:inherit;font-size:.84rem;padding:5px 8px;border
       <details class="ans"><summary id="done-s">Answered</summary><div id="done"></div></details>
     </section>
   </div>
-  <aside class="side" aria-label="Plans, team and work log">
+  <aside class="side" aria-label="Issues, plans, team and work log">
+    <section class="fold open" id="f-issues"><button type="button" class="head" aria-expanded="true" aria-controls="issues"><h2>Issues</h2><span class="count" id="c-i"></span></button><div class="body" id="issues-box">
+      <form class="nf" id="nf" hidden>
+        <input id="nf-title" maxlength="140" placeholder="What needs doing?" aria-label="Issue title" required>
+        <textarea id="nf-detail" rows="3" placeholder="Details, links, what done looks like" aria-label="Details"></textarea>
+        <div class="line">
+          <select id="nf-kind" aria-label="Kind"><option value="task">Task</option><option value="bug">Bug</option><option value="requirement">Requirement</option><option value="docs">Docs</option><option value="ops">Ops</option></select>
+          <select id="nf-pri" aria-label="Priority"><option value="normal">Normal</option><option value="urgent">Urgent</option><option value="later">Later</option></select>
+          <button type="submit" class="pri" id="nf-send">Send</button>
+        </div>
+        <div class="msg" id="nf-msg" aria-live="polite"></div>
+      </form>
+      <div id="issues"><div class="empty">Issues you send appear here, with their ticket.</div></div>
+    </div></section>
     <section class="fold open" id="f-plans"><button type="button" class="head" aria-expanded="true" aria-controls="plans"><h2>Plans</h2><span class="count" id="c-p"></span></button><div class="body" id="plans"><div class="empty">Active plans appear here.</div></div></section>
     <section class="fold open" id="f-team"><button type="button" class="head" aria-expanded="true" aria-controls="agents"><h2>Team</h2><span class="count" id="c-a"></span></button><div class="body" id="agents"><div class="empty">The roster appears here.</div></div></section>
     <section class="fold open" id="f-log"><button type="button" class="head" aria-expanded="true" aria-controls="log"><h2>Work log</h2><span class="count" id="c-l"></span></button><div class="body log" id="log"><div class="empty">Each agent's report appears here.</div></div></section>
@@ -133,7 +151,7 @@ const drafts={};
 const PRIORITY={blocking:0,decision:1,later:2};
 const rank=q=>PRIORITY[q.priority]===undefined?1:PRIORITY[q.priority];
 const pref={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
-['f-plans','f-team','f-log'].forEach(id=>{const f=$(id),h=f.querySelector('.head'),b=f.querySelector('.body');
+['f-issues','f-plans','f-team','f-log'].forEach(id=>{const f=$(id),h=f.querySelector('.head'),b=f.querySelector('.body');
   const set=o=>{f.classList.toggle('open',o);b.hidden=!o;h.setAttribute('aria-expanded',String(o))};
   const v=pref.get(id);if(v!==null)set(v);h.onclick=()=>{const o=!f.classList.contains('open');set(o);pref.set(id,o)}});
 function setWide(w){$('cols').classList.toggle('wide',w);const b=$('toggle');b.textContent=w?'Show sidebar':'Hide sidebar';b.setAttribute('aria-pressed',String(w));pref.set('wide',w)}
@@ -177,8 +195,26 @@ function renderQ(){
   const d=$('done');d.replaceChildren();ans.forEach(q=>{const r=el('div','row'),b=el('div');b.append(el('b',null,q.title||q.id),el('div','sub',q.answer||''));r.append(b);d.append(r)})}
 function rows(id,list,fn,empty){const b=$(id);b.replaceChildren();if(!list.length)b.append(el('div','empty',empty));list.forEach(x=>b.append(fn(x)))}
 function agentRow(a){const r=el('div','row'),b=el('div');b.append(el('b',null,a.role||a.id),el('div','sub',[a.model,a.task].filter(Boolean).join(' · ')));r.append(b,el('span','tag '+(a.state==='working'?'working':'idle'),a.state||'idle'));return r}
-function planRow(p){const r=el('div','row'),b=el('div');b.append(el('b',null,p.title||p.id),el('div','sub',[p.lead,p.status].filter(Boolean).join(' · ')));if(p.next)b.append(el('div','next','Next: '+p.next));r.append(b);return r}
+function planRow(p){const r=el('div','row'),b=el('div');b.append(el('b',null,p.title||p.id),el('div','sub',[p.ticket,p.lead,p.status].filter(Boolean).join(' · ')));if(p.next)b.append(el('div','next','Next: '+p.next));r.append(b);return r}
 function logRow(l){const r=el('div','row'),b=el('div');b.append(el('time',null,when(l.at)),el('div',null,(l.agent||'')+' · '+(l.task||'')),el('div','sub',l.did||''));if(l.decided)b.append(el('div','sub','Decided: '+l.decided));r.append(b);return r}
+/* Issues the owner sends. The page only creates a request; the PO turns it into a ticket and fills ticket and ticketState. */
+function issueRow(i){const r=el('div','row'),b=el('div'),st=['sent','filed','dropped'].includes(i.status)?i.status:'sent';
+  b.append(el('b',null,i.title||i.id),el('div','sub',[i.kind,i.priority!=='normal'?i.priority:'',when(i.createdAt)].filter(Boolean).join(' · ')));
+  if(i.ticket)b.append(el('div','next','Ticket '+i.ticket+(i.ticketState?' · '+i.ticketState:'')));
+  if(i.reason)b.append(el('div','sub',i.reason));
+  r.append(b,el('span','tag '+st,st));return r}
+async function setupForm(){
+  const user=await claude.use('user');if(!(user&&await user.canEdit()))return;  // only the owner (and editors) send issues
+  const f=$('nf'),msg=$('nf-msg'),send=$('nf-send');f.hidden=false;
+  const d=pref.get('nf-draft');if(d){$('nf-title').value=d.t||'';$('nf-detail').value=d.d||''}
+  const keep=()=>pref.set('nf-draft',{t:$('nf-title').value,d:$('nf-detail').value});$('nf-title').oninput=keep;$('nf-detail').oninput=keep;
+  f.onsubmit=async e=>{e.preventDefault();const title=$('nf-title').value.trim();if(!title||send.disabled)return;
+    send.disabled=true;msg.textContent='Sending…';
+    const id='r'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);  // one id per click: a retry cannot duplicate
+    try{await db.collection('requests').doc(id).set({title,detail:$('nf-detail').value.trim(),kind:$('nf-kind').value,priority:$('nf-pri').value,status:'sent',createdAt:new Date().toISOString()});
+      f.reset();pref.set('nf-draft',null);msg.textContent='Sent. The PO files it as a ticket at its next step.'}
+    catch(err){msg.textContent='Could not send. Try again.'}
+    send.disabled=false}}
 function fail(){$('sum').textContent='Could not load. Reopen this page.'}
 (async()=>{
   const t=setTimeout(fail,10000);
@@ -189,6 +225,8 @@ function fail(){$('sum').textContent='Could not load. Reopen this page.'}
   live('agents',l=>{const w=l.filter(a=>a.state==='working').length;$('n-a').textContent=w;$('c-a').textContent=w+' working';rows('agents',l.sort((a,b)=>(a.order||0)-(b.order||0)),agentRow,'The roster appears here.')});
   live('plans',l=>{$('n-p').textContent=l.length;$('c-p').textContent=l.length;rows('plans',l,planRow,'Active plans appear here.')});
   live('log',l=>{$('c-l').textContent=l.length;rows('log',l.sort((a,b)=>String(b.at).localeCompare(String(a.at))).slice(0,50),logRow,"Each agent's report appears here.")});
+  live('requests',l=>{$('c-i').textContent=l.filter(i=>(i.status||'sent')==='sent').length+' new';rows('issues',l.sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt))).slice(0,30),issueRow,'Issues you send appear here, with their ticket.')});
+  setupForm();
   live('meta',l=>{const s=l.find(x=>x.id==='system');$('sys').textContent=s&&s.line||''});
 })();
 </script>

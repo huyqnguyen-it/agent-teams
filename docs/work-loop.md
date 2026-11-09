@@ -58,7 +58,7 @@ Nothing in the loop runs unless a Product Owner session runs. Putting work in do
 | Put work in | Wake the PO |
 |---|---|
 | A ticket: `ticket.py new`, or an issue in the configured tracker | The owner opens Claude Code in the workspace, or sends a running session "check tickets" |
-| A request to the PO or on the board | The scheduled check, below |
+| A request to the PO, or Issues → Send on the board (the PO files every request as a ticket) | The scheduled check, below |
 | A signal in a source, found by an Observer | — the Observer is hired by the PO, so it needs a PO too |
 
 When the PO runs, it starts with `ticket.py list --state triage` and `--state resolved`, and the board.
@@ -135,5 +135,5 @@ Set it up in `team/team.local.json` (per machine):
 
 ## Not covered yet
 
-- The board has no form for a new request: today the owner adds a ticket or an issue in the tracker.
+- The board's Issues form is not yet tried on a published board: the page passed a syntax check only.
 - The scheduled check has run only up to starting the PO; a full headless PO run on a schedule is not tested.

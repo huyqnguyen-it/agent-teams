@@ -104,7 +104,7 @@ TASK DONE developer-1
 PLAN COMPLETE <plan> | PLAN PARTIAL <plan>: <what is left>
 ```
 
-A lead reports PLAN COMPLETE only when: every phase is done; tests pass on final code and the CI pipeline is green on the branch; the Auditor accepted and review items are closed; docs are updated; every task has a log entry; every draft skill from the plan is accepted or deleted (§11); nothing is left unresolved.
+A lead reports PLAN COMPLETE only when: every phase is done; tests pass on final code and the CI pipeline is green on the branch; the Auditor accepted and review items are closed; docs are updated; every task has a log entry; every draft skill from the plan is accepted or deleted, unused skills are retired (§11), and the changed role memories are checked (§8); nothing is left unresolved.
 
 ### Cost
 
@@ -136,7 +136,7 @@ How the loop starts, where it waits for the owner, and the scheduled check: `.te
 
 ### Tickets
 
-Every piece of work that does not come straight from the owner is a ticket, so the team can react to it and nothing is lost. All agents use one command, `.team/tools/ticket.py`, whatever the backend:
+Every piece of work is a ticket, the owner's own requests included, so the team can react to it, the scheduled check sees it, and nothing is lost. All agents use one command, `.team/tools/ticket.py`, whatever the backend:
 
 - **Default:** Markdown files in `team/tickets/<id>.md`, committed. No setup.
 - **A provider** (Redmine, GitLab, Jira...): set `tracker` in `team.config.json` to owner-approved commands, and `ticket.py` runs them instead. Agents do not change:
@@ -153,8 +153,8 @@ Every piece of work that does not come straight from the owner is a ticket, so t
 | # | Step | Who | Command | State |
 |---|---|---|---|---|
 | 1 | A signal comes in | A source (`sources` below), or the owner or a colleague asking | — | — |
-| 2 | Read it; repeat check | Observer (the PO for a request) | `ticket.py find <source id>` | — |
-| 3 | Create the ticket: summary, evidence, source ID, suggested owner | Observer (the PO for a request) | `ticket.py new` | `triage` |
+| 2 | Read it; repeat check | Observer; the PO for any request, from the terminal or the board | `ticket.py find <source id>` | — |
+| 3 | Create the ticket: summary, evidence, source ID, suggested owner | Observer; the PO for a request, before any planning (`--by owner`; `--source board:<request id>` for a board request) | `ticket.py new` | `triage` |
 | 4 | Task or not | PO | `ticket.py move <id> accepted --owner <lead>` | `accepted`; `waiting` (a requirement: the owner decides new scope, asked on the board); `rejected` with the reason |
 | 5 | Read and accept the work, or return it | Lead | `move <id> in-progress --plan <plan>`, or `move <id> triage --note <why>` | `in-progress` |
 | 6 | Resolve, with evidence: tests and the CI pipeline green on the branch | Lead, at PLAN COMPLETE | `move <id> resolved --note <commit, pipeline>` | `resolved` |
@@ -220,6 +220,8 @@ The log is the team's short record. The journal is each role's long-term memory,
 
 The limits are `JOURNAL_MAX_DAYS` (7) and `JOURNAL_KEEP_DAYS` (2). If `memory.md` will not fit in 40 lines, the role is carrying lessons that should be skills.
 
+**Check.** At PLAN COMPLETE the lead reads the `memory.md` changes of every role that worked in its plan (`git diff` since the plan started) against the archived day files, and fixes or removes a line that is wrong or unsupported. The PO does the same for its own and the staff roles' memory at the end of their task. A small model compacts; a lead decides what the team remembers.
+
 ## 9. Talking to the owner
 
 The PO keeps one board (`boardUrl`, created with the `team-board` skill), reads it at every step, and only asks real decisions, each with a recommendation. Push notifications are for blockers only.
@@ -235,6 +237,8 @@ A skill is a short how-to proven on real work, written with `.team/templates/ski
 - **Find:** before exploring, list the `description:` lines of your role skills (`team/roles/<role>/skills/`), `team/skills/` and `.team/skills/`, and open only the skills that match your task. Do not read them all.
 - **Write:** when a task took more than one try, will come back, or its lesson repeats in the role journal (§8). A new skill is `status: draft`, in `team/roles/<role>/skills/`. Only its author uses a draft; every other agent skips it.
 - **Accept:** at PLAN COMPLETE the lead checks each draft from its plan against the work's evidence, then sets `status: accepted` (editing it if needed) or deletes it. Drafts from the PO, Resource Manager, Architect, DevOps or Observer are accepted by the PO at the end of that task. A draft not accepted by then is deleted; what was worth keeping goes to the journal.
+- **Use:** when a skill helped, update its `Last used` line with the date and the plan.
+- **Retire:** at PLAN COMPLETE the lead deletes the accepted skills of the roles in its plan that were not used in its last 5 plans, or that proved wrong, and says so in its journal. The PO does the same for `team/skills/` and the staff roles. Fewer skills keep every start cheap.
 - **Share:** once a second role needs an accepted skill, it moves to `team/skills/`. A generic one can be promoted to this template after Architect review.
 
 ## 12. Models

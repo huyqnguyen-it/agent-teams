@@ -7,7 +7,7 @@ author: <agent> · <plan>
 
 # <what this does>
 
-- **Last used:** YYYY-MM-DD
+- **Last used:** YYYY-MM-DD · <plan>
 
 ## Steps
 

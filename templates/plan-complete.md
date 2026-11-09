@@ -5,5 +5,6 @@ PLAN COMPLETE <plan>        (or PLAN PARTIAL <plan>: <what is left>)
 - [ ] Auditor ACCEPTED; Architect's review items closed
 - [ ] Design docs, changelog, deployment notes updated
 - [ ] Every task has a work log entry
-- [ ] Every draft skill from this plan accepted or deleted
+- [ ] Every draft skill from this plan accepted or deleted; skills unused in 5 plans, or wrong, retired
+- [ ] `memory.md` changes of the plan's roles checked against their journals
 - [ ] Nothing unresolved, or listed here:
