@@ -13,7 +13,8 @@ MEMBERS = {'developer': 'Developer: one task, one repository, on a branch, with 
            'researcher': 'Researcher: one question answered with sources',
            'auditor': 'Auditor: independent check of finished work, ACCEPT or REJECT',
            'tester': 'Tester: runs suites and reports real results',
-           'data-specialist': 'Data Specialist: query analysis, index tests, rebuild plans'}
+           'data-specialist': 'Data Specialist: query analysis, index tests, rebuild plans',
+           'observer': 'Observer: reads workspace sources (telemetry, issues, CI, docs) into tickets'}
 DESC = {'resource-manager': 'Resource Manager: hire-or-reuse decisions and the capacity budget',
         'architect': 'Architect: architecture, conventions, cross-boundary design review',
         'devops': 'DevOps: environments, running apps, resources for teams',
@@ -68,6 +69,9 @@ def main():
         cfg['devopsPermissions'] = ask('What may DevOps change?', cfg['devopsPermissions'])
     cfg['ceiling'] = int(ask('Most agents running at once', cfg['ceiling']))
     cfg.setdefault('commands', example.get('commands', {}))
+    cfg.setdefault('sources', example.get('sources', []))
+    cfg.setdefault('tracker', example.get('tracker', {'provider': 'markdown'}))
+    cfg['models'] = {**example['models'], **cfg['models']}  # a role added to the template gets its default model
     cap = {**detect_capacity(), **local.get('capacity', {})}
     for key in cap:
         cap[key] = float(ask(f'Capacity {key}', cap[key]))
@@ -80,6 +84,7 @@ def main():
     (TEAM / 'team.local.json').write_text(json.dumps(local, indent=2) + '\n')
     sk = TPL / 'skeleton'
     write_new(TEAM / 'README.md', (sk / 'README.md').read_text())
+    (TEAM / 'tickets').mkdir(exist_ok=True)
     for name in ('roster.md', 'board.md'):
         write_new(TEAM / 'status' / name, (sk / 'status' / name).read_text())
     (TEAM / 'log').mkdir(exist_ok=True)
@@ -96,23 +101,37 @@ def main():
         text = text.replace('{{model}}', model).replace('{{repos}}', repos)
         text = text.replace('{{devopsPermissions}}', cfg['devopsPermissions'])
         write_new(base / 'profile.md', text)
+    for role in MEMBERS:  # members are hired fresh, but their role keeps skills and a journal
+        for sub in ('skills', 'journal'):
+            (TEAM / 'roles' / role / sub).mkdir(parents=True, exist_ok=True)
 
     agents = ROOT / '.claude' / 'agents'
     agents.mkdir(parents=True, exist_ok=True)
     tmpl = (TPL / 'agents' / 'agent.md.tmpl').read_text()
     for role in set(DESC) - set(cfg['roles']):  # a role switched off loses its generated agent
         (agents / f'{role}.md').unlink(missing_ok=True)
+    def journal(role):
+        """Start and finish lines for the role journal: its long-term memory (team operating model §8)."""
+        j = f'team/roles/{role}/journal'
+        return (f' Then read {j}/memory.md if it exists and the newest day file in {j}/;'
+                ' grep older ones and the archive only when your task touches the same area.',
+                f', then append your entry to {j}/YYMMDD.md (.team/templates/journal-entry.md)'
+                f' and run `.team/tools/journal-archive.sh {role} --list`: if it lists files, compact and archive'
+                ' (team operating model §8)')
+
     finish = 'Before you stop, append your entry to team/log/YYMMDD.md'
     for role in cfg['roles']:
         if role in DESC:
             base = f'team/roles/{role}'
-            text = tmpl.replace('{{start}}', f'Read {base}/profile.md, then {base}/handover.md.')
-            text = text.replace('{{finish}}', f'{finish} and replace {base}/handover.md.')
+            read, write = journal(role)
+            text = tmpl.replace('{{start}}', f'Read {base}/profile.md, then {base}/handover.md.{read}')
+            text = text.replace('{{finish}}', f'{finish}{write}, and replace {base}/handover.md.')
             (agents / f'{role}.md').write_text(text.replace('{{name}}', role).replace(
                 '{{description}}', DESC[role]).replace('{{model}}', cfg['models'][role]))
     for role, desc in MEMBERS.items():
-        text = tmpl.replace('{{start}}', f'Read .team/roles/members/{role}.md, then your brief.')
-        text = text.replace('{{finish}}', f'{finish}.')
+        read, write = journal(role)
+        text = tmpl.replace('{{start}}', f'Read .team/roles/members/{role}.md, then your brief.{read}')
+        text = text.replace('{{finish}}', f'{finish}{write}.')
         (agents / f'{role}.md').write_text(text.replace('{{name}}', role).replace(
             '{{description}}', desc).replace('{{model}}', cfg['models'][role]))
     skills = ROOT / '.claude' / 'skills'
@@ -125,23 +144,24 @@ def main():
     settings = ROOT / '.claude' / 'settings.json'
     data = load(settings, {})
     allow = data.setdefault('permissions', {}).setdefault('allow', [])
-    rule = 'Bash(.team/tools/capacity-check.sh)'
-    if rule not in allow:
-        allow.append(rule)
+    rules = ['Bash(.team/tools/capacity-check.sh)', 'Bash(.team/tools/journal-archive.sh:*)', 'Bash(.team/tools/ticket.py:*)']
+    if any(r not in allow for r in rules):
+        allow.extend(r for r in rules if r not in allow)
         settings.write_text(json.dumps(data, indent=2) + '\n')
 
     ignore = ROOT / '.gitignore'
     have = ignore.read_text().splitlines() if ignore.exists() else []
-    want = ['.team/', '.claude/', 'team/team.local.json', 'team/**/handover.md']
+    want = ['.team/', '.claude/', 'team/team.local.json', 'team/**/handover.md', 'team/**/.archive.lock']
     missing = [w for w in want if w not in have]
     if missing:
         with ignore.open('a') as f:
             f.write('\n# Agent team\n' + '\n'.join(missing) + '\n')
     attrs = ROOT / '.gitattributes'  # every machine appends to the same log file: merge by keeping both sides
-    union = 'team/log/*.md merge=union'
-    if union not in (attrs.read_text().splitlines() if attrs.exists() else []):
-        with attrs.open('a') as f:
-            f.write(union + '\n')
+    have = attrs.read_text().splitlines() if attrs.exists() else []
+    for union in ('team/log/*.md merge=union', 'team/roles/*/journal/[0-9]*.md merge=union'):
+        if union not in have:
+            with attrs.open('a') as f:
+                f.write(union + '\n')
     identity = subprocess.run(['git', 'config', 'user.email'], cwd=ROOT, capture_output=True, text=True).stdout.strip()
     if not identity:  # a fresh machine has none, and a worker cannot commit without it
         print('Warning: no git identity here. Set git config user.name and user.email before starting a worker.')
@@ -152,7 +172,7 @@ def main():
         with claude.open('a') as f:
             f.write(f'\n## Agent team\n\nTeam rules: {note}\nThe main session is the Product Owner.\n\n'
                     '| Need | Where |\n|---|---|\n| Roles, templates, shared tools and skills | `.team/` (never edit) |\n'
-                    '| Status, roster, board, log, handovers | `team/` |\n| Workspace skills and tools | `team/skills/`, `team/tools/` |\n')
+                    '| Status, roster, board, tickets, log, handovers | `team/` |\n| Workspace skills and tools | `team/skills/`, `team/tools/` |\n')
     print('Team ready. Roles:', ', '.join(cfg['roles']))
     print(subprocess.run([str(TPL / 'tools' / 'capacity-check.sh')], capture_output=True, text=True).stdout.strip())
 

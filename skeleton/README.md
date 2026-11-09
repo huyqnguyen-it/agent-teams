@@ -5,6 +5,7 @@ This workspace's team data. The framework (role definitions, rules, templates, t
 | Folder | Question it answers |
 |---|---|
 | `status/` | What is happening now? |
+| `tickets/` | What came in, and who has it? Open tickets; closed ones in `archive/` |
 | `roles/` | This workspace's scope, handovers, skills and journals per role |
 | `skills/` | Skills any role here can use |
 | `tools/` | Scripts for this workspace |

@@ -18,7 +18,8 @@
     "auditor": "sonnet",
     "researcher": "sonnet",
     "tester": "haiku",
-    "data-specialist": "sonnet"
+    "data-specialist": "sonnet",
+    "observer": "sonnet"
   },
   "repos": {
     "fe-lead": [
@@ -34,5 +35,9 @@
     "test": "",
     "build": "",
     "lint": ""
+  },
+  "sources": [],
+  "tracker": {
+    "provider": "markdown"
   }
 }

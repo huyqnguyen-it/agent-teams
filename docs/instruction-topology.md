@@ -24,7 +24,7 @@ Where each instruction lives, who reads it, and which one wins. Read this when a
                                                │    .team/roles/members/<role>.md
                                                └─ then
                                                     the brief
-                                                    role skills, team/skills/, .team/skills/
+                                                    skills matching the task, by description
                                                     team/team.config.json   commands, repositories
 ```
 
@@ -39,7 +39,8 @@ Agent definitions load when a session starts: after `init`, start a new session.
 | Architect | Agent file, profile, handover, the plan, `docs/` | Before a design review |
 | Resource Manager | Agent file, profile, roster, `team.config.json`, `team.local.json`, capacity check | On each staffing request |
 | DevOps | Agent file, profile, handover, its skills | When started or resumed |
-| Member | Agent file, member profile, the brief, skills | When hired |
+| Member | Agent file, member profile, the brief, matching skills, role journal memory | When hired |
+| Observer | Also `sources` in `team.config.json`, open tickets (`ticket.py list`) | When hired |
 
 ## Who writes what
 
@@ -54,7 +55,9 @@ Agent definitions load when a session starts: after `init`, start a new session.
 | `team/status/board.md` | Product Owner | On each change of status |
 | `handover.md` | That role | Before stopping |
 | `team/log/YYMMDD.md` | Every agent | Before stopping |
-| Skills | The agent that learned it | When a task took more than one try |
+| `team/roles/<role>/journal/YYMMDD.md` | Every agent of that role, members too | Before stopping, after the log entry |
+| Skills | The agent that learned it, as a draft; the lead (or PO) accepts or deletes it | Draft: when a task took more than one try. Accept: at PLAN COMPLETE |
+| `team/tickets/` (or the tracker) | Through `.team/tools/ticket.py` only: Observer or PO create; PO accepts, rejects, closes; the lead takes and resolves | At each step of §6 Tickets |
 
 ## Which one wins
 

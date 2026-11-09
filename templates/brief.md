@@ -2,6 +2,7 @@
 
 - **Task:**
 - **Plan and phase:**
+- **Ticket:** id, or none
 - **Repo or worktree, branch:**
 - **Files to change / read:**
 - **Done when:**

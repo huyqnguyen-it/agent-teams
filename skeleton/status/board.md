@@ -1,4 +1,4 @@
 # Board
 
-| Plan | Lead | Status | Next |
-|---|---|---|---|
+| Plan | Ticket | Lead | Status | Next |
+|---|---|---|---|---|
