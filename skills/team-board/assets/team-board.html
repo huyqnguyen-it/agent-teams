@@ -63,6 +63,8 @@ h2{font-family:var(--f-display);font-size:1.05rem;margin:0;flex:1}
 .src{color:var(--muted);font-size:.76rem;margin:2px 0 6px}
 .q p{margin:4px 0;color:var(--muted);font-size:.86rem}
 .q p.rec{color:var(--ink)}
+.q ol,.q ul{margin:4px 0;padding-left:20px;color:var(--muted);font-size:.86rem}
+.q li{margin:3px 0;padding-left:2px}
 .q p.rec b{font-weight:600}
 .opts{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto;padding-top:10px}
 button{font:inherit;font-size:.84rem;padding:5px 11px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
@@ -136,10 +138,20 @@ const pref={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){retur
   const v=pref.get(id);if(v!==null)set(v);h.onclick=()=>{const o=!f.classList.contains('open');set(o);pref.set(id,o)}});
 function setWide(w){$('cols').classList.toggle('wide',w);const b=$('toggle');b.textContent=w?'Show sidebar':'Hide sidebar';b.setAttribute('aria-pressed',String(w));pref.set('wide',w)}
 setWide(pref.get('wide')===true);$('toggle').onclick=()=>setWide(!$('cols').classList.contains('wide'));
+/* Context text: one line per line. "1. " lines become a numbered list, "- " lines a bullet list, a blank line
+   starts a new paragraph; every other line is its own paragraph. textContent only, never HTML. */
+function rich(text){const box=document.createDocumentFragment();let list=null,kind=null;
+  String(text).split(/\r?\n/).forEach(raw=>{const line=raw.trim();
+    if(!line){list=null;kind=null;return}
+    const n=line.match(/^(\d+)[.)]\s+(.*)$/),u=line.match(/^[-*\u2022]\s+(.*)$/),k=n?'ol':u?'ul':null;
+    if(!k){list=null;kind=null;box.append(el('p',null,line));return}
+    if(kind!==k){list=el(k);if(n&&n[1]!=='1')list.start=Number(n[1]);kind=k;box.append(list)}
+    list.append(el('li',null,n?n[2]:u[1]))});
+  return box}
 function card(q){
   const pr=PRIORITY[q.priority]===undefined?'decision':q.priority;const c=el('article','q '+pr);c.append(el('span','tag mark '+pr,pr));c.append(el('h3',null,q.title||q.id),el('div','src',[q.session,q.from].filter(Boolean).join(' · ')));
   if(q.blocks)c.append(el('div','blocks','Blocks: '+q.blocks));
-  if(q.context)c.append(el('p',null,q.context));
+  if(q.context)c.append(rich(q.context));
   if(q.recommendation){const r=el('p','rec');r.append(el('b',null,'Recommended: '),document.createTextNode(q.recommendation));c.append(r)}
   const send=async(a)=>{btns.forEach(b=>b.disabled=true);try{await db.doc('questions/'+q.id).update({status:'answered',answer:a,answeredAt:new Date().toISOString()});delete drafts[q.id]}catch(e){btns.forEach(b=>b.disabled=false);c.append(el('p',null,'Could not save. Try again.'))}};
   const o=el('div','opts'),btns=[];
