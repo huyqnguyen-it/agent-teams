@@ -3,7 +3,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
 /* Layout: full-width console. Top strip = state at a glance; decisions take the screen; a narrow right sidebar holds
-   Plans, Team and Work log as collapsible sections, and can be hidden. Below 1100px everything stacks and the page scrolls. */
+   Issues, Plans and Team as collapsible sections, and can be hidden. Below 1100px everything stacks and the page scrolls. */
 :root{
   --bg:#eef2f3;--surface:#fff;--raised:#f6f9f9;--ink:#17242a;--muted:#566872;--line:#d3dde0;
   --accent:#0f6b78;--accent-soft:#dff0f2;--on-accent:#fff;
@@ -39,6 +39,7 @@ h1{font-family:var(--f-display);font-size:1.45rem;line-height:1.1;margin:0;white
 .side{display:flex;flex-direction:column;gap:8px;min-height:0;min-width:0}
 .fold{background:var(--surface);border:1px solid var(--line);border-radius:10px;display:flex;flex-direction:column;min-height:0;min-width:0;overflow:hidden;flex:0 0 auto}
 .fold.open{flex:1 1 0}
+#f-issues.open{flex:0 0 auto}#f-issues>.body{flex:0 0 auto;max-height:360px}  /* the form keeps its full height; the list scrolls */
 .fold>.head{display:flex;align-items:center;gap:8px;width:100%;padding:9px 12px;border:0;border-radius:0;background:none;text-align:left;flex:none}
 .fold>.head::before{content:'▸';color:var(--muted);transition:transform .15s}
 .fold.open>.head::before{transform:rotate(90deg)}
@@ -50,7 +51,13 @@ h1{font-family:var(--f-display);font-size:1.45rem;line-height:1.1;margin:0;white
 h2{font-family:var(--f-display);font-size:1.05rem;margin:0;flex:1}
 .count{font-family:var(--f-mono);font-size:.78rem;color:var(--muted)}
 .body{overflow:auto;padding:4px 14px 12px;flex:1;min-height:0}
-.chips{display:flex;flex-wrap:wrap;gap:6px;padding:10px 14px 0}
+.qhead{flex-wrap:wrap;row-gap:8px}.qhead h2{flex:none}
+.tabs{display:flex;gap:2px;padding:2px;background:var(--raised);border:1px solid var(--line);border-radius:8px}
+.tab{border:0;background:none;padding:4px 10px;font-size:.8rem;color:var(--muted)}
+.tab[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 0 0 1px var(--line)}
+.tab .n{font-family:var(--f-mono);margin-left:5px}.tab.hot .n{color:var(--ask);font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:6px;flex:1;min-width:0}
+.qlist{padding-top:4px}
 .chip{font-size:.78rem;padding:3px 10px;border-radius:999px}
 .chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
 .qgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:10px;padding-top:10px}
@@ -84,10 +91,6 @@ textarea{flex:1;min-width:0;font:inherit;font-size:.84rem;padding:5px 8px;border
 .sub{color:var(--muted);font-size:.8rem;overflow-wrap:anywhere}
 .next{font-size:.8rem;overflow-wrap:anywhere}
 .log time{font-family:var(--f-mono);font-size:.74rem;color:var(--muted);white-space:nowrap}
-.ans{padding:0 14px 10px}
-.pend{padding:4px 14px 10px;border-top:1px solid var(--line)}
-.pend h3{font-size:.84rem;margin:8px 0 4px;color:var(--accent)}
-.ans summary{cursor:pointer;color:var(--muted);font-size:.84rem;padding:8px 0}
 .nf{display:flex;flex-direction:column;gap:6px;padding:8px 0 10px;border-bottom:1px solid var(--line)}
 .nf input,.nf select{font:inherit;font-size:.84rem;padding:5px 8px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink);min-width:0}
 .nf .line{display:flex;gap:6px}.nf .line select{flex:1}
@@ -118,14 +121,14 @@ textarea{flex:1;min-width:0;font:inherit;font-size:.84rem;padding:5px 8px;border
 <div class="cols" id="cols">
   <div class="col">
     <section class="panel" aria-labelledby="h-q">
-      <header><h2 id="h-q">Waiting for you</h2><span class="count" id="sum">Connecting…</span></header>
-      <div class="chips" id="chips"></div>
-      <div class="body"><div class="qgrid" id="qs"></div></div>
-      <section class="pend" id="pend-box" hidden aria-labelledby="pend-h"><h3 id="pend-h">Answered, not handled yet</h3><div id="pend"></div></section>
-      <details class="ans"><summary id="done-s">Answered</summary><div id="done"></div></details>
+      <header class="qhead"><h2 id="h-q">Waiting for you</h2>
+        <div class="tabs" role="tablist" aria-label="Questions" id="tabs"></div>
+        <div class="chips" id="chips" aria-label="Session"></div>
+        <span class="count" id="sum">Connecting…</span></header>
+      <div class="body"><div class="qgrid" id="qs" role="tabpanel" aria-labelledby="h-q"></div></div>
     </section>
   </div>
-  <aside class="side" aria-label="Issues, plans, team and work log">
+  <aside class="side" aria-label="Issues, plans and team">
     <section class="fold open" id="f-issues"><button type="button" class="head" aria-expanded="true" aria-controls="issues"><h2>Issues</h2><span class="count" id="c-i"></span></button><div class="body" id="issues-box">
       <form class="nf" id="nf" hidden>
         <input id="nf-title" maxlength="140" placeholder="What needs doing?" aria-label="Issue title" required>
@@ -141,7 +144,6 @@ textarea{flex:1;min-width:0;font:inherit;font-size:.84rem;padding:5px 8px;border
     </div></section>
     <section class="fold open" id="f-plans"><button type="button" class="head" aria-expanded="true" aria-controls="plans"><h2>Plans</h2><span class="count" id="c-p"></span></button><div class="body" id="plans"><div class="empty">Active plans appear here.</div></div></section>
     <section class="fold open" id="f-team"><button type="button" class="head" aria-expanded="true" aria-controls="agents"><h2>Team</h2><span class="count" id="c-a"></span></button><div class="body" id="agents"><div class="empty">The roster appears here.</div></div></section>
-    <section class="fold open" id="f-log"><button type="button" class="head" aria-expanded="true" aria-controls="log"><h2>Work log</h2><span class="count" id="c-l"></span></button><div class="body log" id="log"><div class="empty">Each agent's report appears here.</div></div></section>
   </aside>
 </div>
 </div>
@@ -154,7 +156,7 @@ const drafts={};
 const PRIORITY={blocking:0,decision:1,later:2};
 const rank=q=>PRIORITY[q.priority]===undefined?1:PRIORITY[q.priority];
 const pref={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
-['f-issues','f-plans','f-team','f-log'].forEach(id=>{const f=$(id),h=f.querySelector('.head'),b=f.querySelector('.body');
+['f-issues','f-plans','f-team'].forEach(id=>{const f=$(id),h=f.querySelector('.head'),b=f.querySelector('.body');
   const set=o=>{f.classList.toggle('open',o);b.hidden=!o;h.setAttribute('aria-expanded',String(o))};
   const v=pref.get(id);if(v!==null)set(v);h.onclick=()=>{const o=!f.classList.contains('open');set(o);pref.set(id,o)}});
 function setWide(w){$('cols').classList.toggle('wide',w);const b=$('toggle');b.textContent=w?'Show sidebar':'Hide sidebar';b.setAttribute('aria-pressed',String(w));pref.set('wide',w)}
@@ -181,30 +183,31 @@ function card(q){
   const f=el('div','free'),ta=el('textarea');ta.rows=1;ta.id='a-'+q.id;ta.placeholder='Or write your answer';ta.setAttribute('aria-label','Your answer');ta.value=drafts[q.id]||'';ta.oninput=()=>{drafts[q.id]=ta.value};
   const s=el('button',null,'Send');s.type='button';s.onclick=()=>{const v=ta.value.trim();if(v)send(v)};btns.push(s);
   f.append(ta,s);c.append(f);return c}
+/* One panel, three tabs: open questions (cards to answer), answered but not yet handled by the PO, and done.
+   The session filter applies to the selected tab. */
+let tab=pref.get('qtab')||'open';
+function ansRow(q,tag){const r=el('div','row'),b=el('div');b.append(el('b',null,q.title||q.id),el('div','src',[q.session,when(q.answeredAt)].filter(Boolean).join(' · ')),el('div','sub','You: '+(q.answer||'')));if(q.outcome)b.append(el('div','next','PO: '+q.outcome));r.append(b);if(tag)r.append(el('span','tag sent',tag));return r}
 function renderQ(){
   const open=qs.filter(q=>q.status!=='answered'),ans=qs.filter(q=>q.status==='answered');
-  const sessions=[...new Set(open.map(q=>q.session||'Other'))].sort();
+  const byTime=(a,b)=>String(b.answeredAt).localeCompare(String(a.answeredAt));
+  const lists={open,pend:ans.filter(q=>!q.handled).sort(byTime),done:ans.filter(q=>q.handled).sort(byTime)};
+  if(!lists[tab])tab='open';
+  const tb=$('tabs');tb.replaceChildren();
+  [['open','Open'],['pend','With PO'],['done','Done']].forEach(([k,label])=>{const b=el('button','tab'+(k==='open'&&open.length?' hot':''),label);b.type='button';b.setAttribute('role','tab');b.setAttribute('aria-selected',String(k===tab));b.append(el('span','n',String(lists[k].length)));b.onclick=()=>{tab=k;pref.set('qtab',k);renderQ()};tb.append(b)});
+  const pool=lists[tab],sessions=[...new Set(pool.map(q=>q.session||'Other'))].sort();
   if(filter!=='All'&&!sessions.includes(filter))filter='All';
   const ch=$('chips');ch.replaceChildren();
-  ['All',...sessions].forEach(k=>{const n=k==='All'?open.length:open.filter(q=>(q.session||'Other')===k).length;const b=el('button','chip',k+' '+n);b.type='button';b.setAttribute('aria-pressed',String(k===filter));b.onclick=()=>{filter=k;renderQ()};ch.append(b)});
-  ch.hidden=!open.length;
-  const box=$('qs');box.replaceChildren();
-  const shown=(filter==='All'?open:open.filter(q=>(q.session||'Other')===filter)).slice().sort((a,b)=>rank(a)-rank(b));
-  if(!open.length)box.append(el('div','empty','Nothing is waiting for you.'));
-  shown.forEach(q=>box.append(card(q)));
+  if(sessions.length>1)['All',...sessions].forEach(k=>{const n=k==='All'?pool.length:pool.filter(q=>(q.session||'Other')===k).length;const b=el('button','chip',k+' '+n);b.type='button';b.setAttribute('aria-pressed',String(k===filter));b.onclick=()=>{filter=k;renderQ()};ch.append(b)});
+  const shown=filter==='All'?pool:pool.filter(q=>(q.session||'Other')===filter);
+  const box=$('qs');box.replaceChildren();box.className=tab==='open'?'qgrid':'qlist';
+  if(!shown.length)box.append(el('div','empty',{open:'Nothing is waiting for you.',pend:'No answer is waiting for the PO.',done:'Nothing handled yet.'}[tab]));
+  if(tab==='open')shown.slice().sort((a,b)=>rank(a)-rank(b)).forEach(q=>box.append(card(q)));
+  else shown.forEach(q=>box.append(ansRow(q,tab==='pend'?'with PO':'')));
   $('n-q').textContent=open.length;$('s-q').classList.toggle('hot',open.length>0);
-  $('sum').textContent=sessions.length+(sessions.length===1?' session':' sessions');
-  /* An answer stays in view until the PO marks it handled (handled: true, optional outcome). */
-  const pend=ans.filter(q=>!q.handled).sort((a,b)=>String(b.answeredAt).localeCompare(String(a.answeredAt))),done=ans.filter(q=>q.handled);
-  const ansRow=(q,tag)=>{const r=el('div','row'),b=el('div');b.append(el('b',null,q.title||q.id),el('div','sub','You: '+(q.answer||'')));if(q.outcome)b.append(el('div','next','PO: '+q.outcome));r.append(b);if(tag)r.append(el('span','tag sent',tag));return r};
-  $('pend-box').hidden=!pend.length;$('pend-h').textContent='Answered, not handled yet ('+pend.length+')';
-  const pd=$('pend');pd.replaceChildren();pend.forEach(q=>pd.append(ansRow(q,'with PO')));
-  $('done-s').textContent='Answered and handled ('+done.length+')';
-  const d=$('done');d.replaceChildren();done.forEach(q=>d.append(ansRow(q)))}
+  $('sum').textContent=open.length?(open.length+' to answer'):'all answered'}
 function rows(id,list,fn,empty){const b=$(id);b.replaceChildren();if(!list.length)b.append(el('div','empty',empty));list.forEach(x=>b.append(fn(x)))}
 function agentRow(a){const r=el('div','row'),b=el('div');b.append(el('b',null,a.role||a.id),el('div','sub',[a.model,a.task].filter(Boolean).join(' · ')));r.append(b,el('span','tag '+(a.state==='working'?'working':'idle'),a.state||'idle'));return r}
 function planRow(p){const r=el('div','row'),b=el('div');b.append(el('b',null,p.title||p.id),el('div','sub',[p.ticket,p.lead,p.status].filter(Boolean).join(' · ')));if(p.next)b.append(el('div','next','Next: '+p.next));r.append(b);return r}
-function logRow(l){const r=el('div','row'),b=el('div');b.append(el('time',null,when(l.at)),el('div',null,(l.agent||'')+' · '+(l.task||'')),el('div','sub',l.did||''));if(l.decided)b.append(el('div','sub','Decided: '+l.decided));r.append(b);return r}
 /* Issues the owner sends. The page only creates a request; the PO turns it into a ticket and fills ticket and ticketState. */
 function issueRow(i){const r=el('div','row'),b=el('div'),st=['sent','filed','dropped'].includes(i.status)?i.status:'sent';
   b.append(el('b',null,i.title||i.id),el('div','sub',[i.kind,i.priority!=='normal'?i.priority:'',when(i.createdAt)].filter(Boolean).join(' · ')));
@@ -232,7 +235,6 @@ function fail(){$('sum').textContent='Could not load. Reopen this page.'}
   live('questions',l=>{qs=l.sort((a,b)=>String(a.createdAt).localeCompare(String(b.createdAt)));renderQ()});
   live('agents',l=>{const w=l.filter(a=>a.state==='working').length;$('n-a').textContent=w;$('c-a').textContent=w+' working';rows('agents',l.sort((a,b)=>(a.order||0)-(b.order||0)),agentRow,'The roster appears here.')});
   live('plans',l=>{$('n-p').textContent=l.length;$('c-p').textContent=l.length;rows('plans',l,planRow,'Active plans appear here.')});
-  live('log',l=>{$('c-l').textContent=l.length;rows('log',l.sort((a,b)=>String(b.at).localeCompare(String(a.at))).slice(0,50),logRow,"Each agent's report appears here.")});
   live('requests',l=>{$('c-i').textContent=l.filter(i=>(i.status||'sent')==='sent').length+' new';rows('issues',l.sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt))).slice(0,30),issueRow,'Issues you send appear here, with their ticket.')});
   setupForm();
   live('meta',l=>{const s=l.find(x=>x.id==='system');$('sys').textContent=s&&s.line||''});

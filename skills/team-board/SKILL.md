@@ -1,6 +1,6 @@
 ---
 name: team-board
-description: Create and maintain the team board, a private live page showing questions for the owner by session, issues the owner sends, who is working, plans and the work log. Use when setting up a team, when a workspace has no board, or when the owner must be asked something.
+description: Create and maintain the team board, a private live page showing questions for the owner by session, issues the owner sends, who is working and the plans. Use when setting up a team, when a workspace has no board, or when the owner must be asked something.
 ---
 
 # Team board
@@ -18,7 +18,6 @@ A private artifact page. Its data lives in the artifact's database, so updating 
   { "path": "requests", "read": "view", "write": "admin" },
   { "path": "agents", "read": "view", "write": "admin" },
   { "path": "plans", "read": "view", "write": "admin" },
-  { "path": "log", "read": "view", "write": "admin" },
   { "path": "meta", "read": "view", "write": "admin" }
 ] }, "user": {} }
 ```
@@ -31,24 +30,39 @@ A private artifact page. Its data lives in the artifact's database, so updating 
 
 When the template's page changes (for example, the Issues form), republish it to the same `boardUrl` from a fresh copy of `assets/team-board.html`, with the full `capabilities` above: a capabilities object replaces the stored one, so a rule left out is removed. The data stays.
 
+A board made before questions carried `handled`: once, set `handled: false` on every question without it (one `batch`), or the unhandled-answers query misses them.
+
 ## Collections
 
 | Collection | Document fields |
 |---|---|
-| `questions` | `session`, `from`, `title`, `context` (lines separated by `\n`; `1. ` and `- ` lines render as lists), `recommendation`, `options` (list), `status` (`open`, `answered`), `priority` (`blocking`, `decision`, `later`), `blocks` (what it holds up), `createdAt`; on answer: `answer`, `answeredAt`; the PO adds `handled: true` and an optional `outcome` (one line: what it did) once it has acted |
+| `questions` | `session`, `from`, `title`, `context` (lines separated by `\n`; `1. ` and `- ` lines render as lists), `recommendation`, `options` (list), `status` (`open`, `answered`), `priority` (`blocking`, `decision`, `later`), `blocks` (what it holds up), `createdAt`, `handled: false` (set when created, so unhandled answers can be queried); on answer: `answer`, `answeredAt`; the PO adds `handled: true` and an optional `outcome` (one line: what it did) once it has acted |
 | `agents` | `role`, `model`, `state` (`working`, `idle`), `task`, `order` |
 | `requests` | Written by the page when the owner sends an issue: `title`, `detail`, `kind` (`task`, `bug`, `requirement`, `docs`, `ops`), `priority` (`normal`, `urgent`, `later`), `status` (`sent`), `createdAt`. The PO adds: `status` (`filed`, `dropped`), `ticket`, `ticketState`, `reason` (why dropped) |
 | `plans` | `title`, `ticket`, `lead`, `status`, `next` |
-| `log` | `at`, `agent`, `task`, `did`, `decided` |
 | `meta/system` | `line`: the latest capacity check line |
 
-## Keep it current
+## Keep it current, cheaply
 
-- **Read `questions` at every step.** An answer does not wake a session: the board is useless if nobody reads it. Keep a `status == answered` read in your routine. An answered card stays under **Answered, not handled yet** until you set `handled: true`; an answer that is itself a question stays there until you answer it with a new card.
-- **Read `requests` with `status == sent` at every step too.** File each as a ticket before any planning: `ticket.py new --title <title> --kind <kind> --by owner --source board:<doc id>` with the detail as the body (`--source` makes a second filing impossible). Then update the request: `status: filed`, `ticket`, `ticketState: triage`. Change `ticketState` as the ticket moves. A request that is not work (a question, a duplicate) gets `status: dropped` and a `reason`.
-- Update `agents` when one starts or stops, `plans` when status changes, and `log` with short entries.
-- Every write needs `if_version` for an existing document. On a mismatch, read it again first: the owner may have just answered.
-- Use `batch` for more than a couple of writes.
+Every board call is a tool call: its input and result cost tokens and stay in the PO's context. Read only what can need action, write only what changed, and keep data in git out of the board.
+
+- **Read with a query, never a full list.** At every step, two queries only:
+  - `questions` where `status == answered` and `handled == false` (ArtifactData `query`, `where: [["status","==","answered"],["handled","==",false]]`): answers you have not acted on. An answer does not wake a session, so this read is the routine. After acting, set `handled: true` and a one-line `outcome` (the page moves the card from the **With PO** tab to **Done**); an answer that is itself a question stays until you answer it with a new card.
+  - `requests` where `status == sent` (`where: [["status","==","sent"]]`): file each as a ticket before any planning, `ticket.py new --title <title> --kind <kind> --by owner --source board:<doc id>` with the detail as the body (`--source` makes a second filing impossible). Then set `status: filed`, `ticket`, `ticketState: triage`. A request that is not work gets `status: dropped` and a `reason`.
+- **Write once per step:** collect the changes and send one `batch`, only for documents that changed. Never make a board call only to update status: status rides along with the step's batch, or waits for the next one.
+- **Versions without extra reads:** a write to an existing document needs its `version`. Take it from the queries above and from each batch result; at the start of a session, one `list` of `plans` and one of `agents` (a few small documents) gives the rest. Do not `get` a document just before writing it. Every write to an existing document needs `if_version`; on a mismatch, read that one document again (the owner may have just answered).
+- **What to write, and when:**
+
+| Collection | Write when | Not |
+|---|---|---|
+| `questions` | A real decision is needed (below); `handled` after acting | Status updates: those are `plans` |
+| `requests` | Filed or dropped; `ticketState` when the ticket moves | — |
+| `plans` | Status changes | Every step of a plan |
+| `agents` | One starts or stops | Progress inside a task |
+| `meta/system` | Capacity changes colour (GREEN, YELLOW, RED) | Every capacity check |
+
+- **Keep it small:** at the end of a session, in the same batch, delete questions handled more than 14 days ago and requests whose ticket is closed. Decisions stay in the log and journals in git.
+- Never read the board to find out what the team did: read `team/status/` and the tickets, which cost no board calls.
 
 ## Working with the owner
 
@@ -59,7 +73,7 @@ The board is for decisions, not chat. Clicking an answer costs almost no tokens;
 | Decide something | The board: click an answer |
 | Give the team work | The board: Issues, Send. The PO files it as a ticket |
 | Know something is waiting | Push notification, for blockers only |
-| See status | The board: plans, team, log |
+| See status | The board: plans, team, issues. The full record: `team/log/` in git |
 | Discuss or change direction | Remote Control or the terminal |
 
 - An answer does not wake an idle session. After answering, the owner sends one short message, such as "check board".
