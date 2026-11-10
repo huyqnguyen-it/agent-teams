@@ -3,7 +3,12 @@
     "minAvailGb": 8,
     "stopAvailGb": 6,
     "maxLoad5": 12,
-    "stopDiskPct": 85
+    "stopDiskPct": 85,
+    "maxAgents": 4,
+    "perAgentGb": 2,
+    "perAgentLoad": 1,
+    "heavyGb": 4,
+    "heavyLoad": 2
   },
   "boardUrl": "",
   "hosts": [
@@ -14,7 +19,8 @@
       "use": [
         "exec",
         "worker"
-      ]
+      ],
+      "maxAgents": 3
     }
   ],
   "schedule": {
@@ -32,7 +38,11 @@
       "Bash(git status:*)",
       "Bash(git log:*)",
       "Bash(git diff:*)",
-      "Bash(.team/tools/gitlab-pipelines.py:*)"
-    ]
+      "Bash(.team/tools/gitlab-pipelines.py:*)",
+      "Bash(.team/tools/resource-lease.py:*)"
+    ],
+    "maxTurns": 60,
+    "maxBudgetUsd": 3,
+    "timeoutMin": 25
   }
 }

@@ -2,6 +2,7 @@
 # Team capacity check. Costs no tokens: prints one status line.
 # GREEN = may hire; YELLOW = no new hires, capped runs only; RED = stop every run.
 # Limits come from team/team.local.json (capacity.*); run from the workspace root or set TEAM_LOCAL.
+# --json prints the same numbers as one JSON object, for resource-lease.py.
 export LC_ALL=C
 CFG="${TEAM_LOCAL:-team/team.local.json}"
 read -r MINA STOPA MAXL STOPD < <(python3 - "$CFG" <<'PY'
@@ -23,4 +24,9 @@ awk -v l="$L" -v m="$MAXL" 'BEGIN{exit !(l<m)}' || ST=YELLOW
 awk -v a="$A" -v m="$MINA" 'BEGIN{exit !(a>m)}' || ST=YELLOW
 { awk -v a="$A" -v m="$STOPA" 'BEGIN{exit !(a<m)}' || [ "$D" -ge "$STOPD" ] || [ "$OOM" -ne 0 ]; } && ST=RED
 WARN=""; [ "$SW" -lt 80 ] || WARN=" WARN:swap"
+if [ "${1:-}" = "--json" ]; then  # for resource-lease.py, locally or over ssh
+  T=$(free -m | awk '/Mem/{printf "%.1f", $2/1024}')
+  echo "{\"status\":\"$ST\",\"load5\":$L,\"availGb\":$A,\"totalGb\":$T,\"cores\":$(nproc),\"disk\":$D,\"oom\":$OOM,\"heavy\":$HEAVY,\"minAvailGb\":$MINA,\"maxLoad5\":$MAXL}"
+  exit 0
+fi
 echo "$(date +%H:%M) $ST load5=$L availG=$A disk=$D% swap=$SW% oom6m=$OOM heavy=$HEAVY$WARN"

@@ -81,6 +81,8 @@ A lower level never overrides a higher one. If two conflict, stop and ask the le
 | Every workspace | Template: `docs/team-operating-model.md` |
 | One role, in every workspace | Template: `roles/<role>/profile.md` |
 | One role, here only | `team/roles/<role>/profile.md` |
+| How code looks in one repo | That repo: linter and formatter config first; the rest in its `docs/code-standards.md` (or its existing `CLAUDE.md` / `CONTRIBUTING.md`) |
+| How code looks across repos | Workspace `docs/conventions.md`, owned by the Architect |
 | How to do a repeated task | A skill |
 | One task only | The brief |
 

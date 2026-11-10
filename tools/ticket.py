@@ -11,11 +11,15 @@ each action runs that owner-approved command instead (values are shell-quoted).
   ticket.py find SOURCE                      open tickets for this source ID (repeat check)
   ticket.py move ID STATE --by AGENT [--note N] [--owner ROLE] [--plan P]
   ticket.py comment ID --by AGENT --note N
+  ticket.py fail ID --by AGENT --note N         record a failed round; at maxRounds the ticket goes to waiting
 
 Flow (team operating model §6, Tickets): triage -> accepted | waiting | rejected;
 waiting -> accepted | rejected; accepted -> in-progress | triage; in-progress -> resolved | triage | waiting;
 resolved -> closed | in-progress. Closed and rejected tickets move to team/tickets/archive/YYMM/.
-Exit codes: 0 ok, 2 bad input, 3 an open ticket already has this source.
+A failed round (lead's review or the Auditor sends work back, or BLOCKED) is recorded with `fail`. At maxRounds
+(team.config.json, default 3) the ticket goes to waiting for the owner, and `move ... in-progress` is refused until the
+owner allows more rounds: then the PO moves it with --owner-ok, which starts the count again.
+Exit codes: 0 ok, 2 bad input, 3 an open ticket already has this source, 5 retry limit reached.
 """
 import argparse, datetime, json, os, pathlib, secrets, shlex, subprocess, sys
 
@@ -26,7 +30,7 @@ FLOW = {'triage': {'accepted', 'waiting', 'rejected'}, 'waiting': {'accepted', '
         'accepted': {'in-progress', 'triage'}, 'in-progress': {'resolved', 'triage', 'waiting'},
         'resolved': {'closed', 'in-progress'}}
 DONE = {'closed', 'rejected'}
-FIELDS = ('id', 'title', 'kind', 'state', 'source', 'owner', 'plan', 'created')
+FIELDS = ('id', 'title', 'kind', 'state', 'source', 'owner', 'plan', 'rounds', 'created')
 
 
 def fail(msg, code=2):
@@ -102,6 +106,12 @@ def md_move(a):
     meta, body = read(path)
     if a.state not in FLOW.get(meta['state'], set()):
         fail(f"{a.id} is {meta['state']}: may go to {', '.join(sorted(FLOW.get(meta['state'], []))) or 'nowhere'}")
+    rounds, limit = int(meta.get('rounds') or 0), max_rounds()
+    if a.state == 'in-progress' and rounds >= limit:
+        if not a.owner_ok:
+            fail(f"{a.id} failed {rounds} rounds (limit {limit}): the owner decides. With the owner's answer, add --owner-ok", 5)
+        meta['rounds'] = '0'
+        a.note = ('owner allowed more rounds. ' + (a.note or '')).strip()
     meta['state'] = a.state
     meta['owner'] = one_line(a.owner) or meta['owner']
     meta['plan'] = one_line(a.plan) or meta['plan']
@@ -112,6 +122,25 @@ def md_move(a):
         dest.mkdir(parents=True, exist_ok=True)
         path.rename(dest / path.name)
     print(f'{a.id} {a.state}')
+
+
+def max_rounds():
+    return int((json.loads(CFG.read_text()) if CFG.exists() else {}).get('maxRounds', 3))
+
+
+def md_fail(a):
+    path = locate(a.id)
+    meta, body = read(path)
+    rounds, limit = int(meta.get('rounds') or 0) + 1, max_rounds()
+    meta['rounds'] = str(rounds)
+    body = body.rstrip('\n') + f'\n- {now()} {a.by}: failed round {rounds}/{limit}: {one_line(a.note)}\n'
+    if rounds >= limit and meta['state'] == 'in-progress':
+        meta['state'] = 'waiting'
+        body += f'- {now()} {a.by}: waiting: retry limit reached, the owner decides\n'
+        print(f'{a.id} RETRY LIMIT: waiting. The PO asks the owner on the board: retry, change the task, or drop it.')
+    else:
+        print(f'{a.id} failed round {rounds}/{limit}')
+    write(path, meta, body)
 
 
 def md_comment(a):
@@ -164,6 +193,11 @@ def main():
     mv.add_argument('--by', required=True)
     for opt in ('--note', '--owner', '--plan'):
         mv.add_argument(opt, default='')
+    mv.add_argument('--owner-ok', action='store_true')
+    fl = sub.add_parser('fail')
+    fl.add_argument('id')
+    fl.add_argument('--by', required=True)
+    fl.add_argument('--note', required=True)
     c = sub.add_parser('comment')
     c.add_argument('id')
     c.add_argument('--by', required=True)
@@ -172,13 +206,15 @@ def main():
 
     tracker = json.loads(CFG.read_text()).get('tracker', {}) if CFG.exists() else {}
     if tracker.get('provider', 'markdown') != 'markdown':
+        if a.action == 'fail':  # a provider has no round count: the lead counts the FAILED ROUND comments
+            a.action, a.note = 'comment', f'FAILED ROUND: {a.note}'
         provider(tracker, a.action, a)
     if a.action == 'show':
         print(locate(a.id).read_text(), end='')
     elif a.action == 'find':
         md_find(a.source)
     else:
-        {'new': md_new, 'list': md_list, 'move': md_move, 'comment': md_comment}[a.action](a)
+        {'new': md_new, 'list': md_list, 'move': md_move, 'comment': md_comment, 'fail': md_fail}[a.action](a)
 
 
 if __name__ == '__main__':

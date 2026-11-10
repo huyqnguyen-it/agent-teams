@@ -145,18 +145,30 @@ def main():
 
     settings = ROOT / '.claude' / 'settings.json'
     data = load(settings, {})
-    allow = data.setdefault('permissions', {}).setdefault('allow', [])
-    rules = ['Bash(.team/tools/capacity-check.sh)', 'Bash(.team/tools/journal-archive.sh:*)', 'Bash(.team/tools/ticket.py:*)', 'Bash(.team/tools/scheduled-check.sh)', 'Bash(.team/tools/gitlab-pipelines.py:*)']
-    deny = data['permissions'].setdefault('deny', [])
-    secret = 'Read(~/.config/agent-team/**)'  # the owner's GitLab token: tools use it, agents never read it
-    if any(r not in allow for r in rules) or secret not in deny:
-        allow.extend(r for r in rules if r not in allow)
-        deny.extend([secret] if secret not in deny else [])
+    before = json.dumps(data, sort_keys=True)
+    perms = data.setdefault('permissions', {})
+    allow, deny = perms.setdefault('allow', []), perms.setdefault('deny', [])
+    allow.extend(r for r in [f'Bash(.team/tools/{t})' for t in ('capacity-check.sh', 'journal-archive.sh:*', 'ticket.py:*',
+                 'scheduled-check.sh', 'gitlab-pipelines.py:*', 'resource-lease.py:*')] if r not in allow)
+    # Enforced by the harness, not only written in the rules (team operating model §7):
+    deny.extend(r for r in ['Read(~/.config/agent-team/**)',  # the owner's GitLab token: tools use it, agents never read it
+                            'Read(~/.ssh/**)', 'Read(**/.env)', 'Read(**/.env.*)', 'Read(**/*.pem)', 'Read(**/*.key)',
+                            'Edit(.team/**)', 'Write(.team/**)',  # the template is never edited in a workspace
+                            'Edit(team/tickets/**)', 'Write(team/tickets/**)']  # tickets change through ticket.py only
+                if r not in deny)
+    data.setdefault('attribution', {'commit': '', 'pr': ''})  # no AI or co-author lines in commits and PRs
+    hooks = data.setdefault('hooks', {})
+    for event, matcher, arg in (('PreToolUse', 'Bash|Edit|Write', 'guard'), ('SubagentStart', '', 'start'), ('SubagentStop', '', 'stop')):
+        command = f'"$CLAUDE_PROJECT_DIR"/.team/tools/team-hooks.py {arg}'
+        entries = hooks.setdefault(event, [])
+        if not any(h.get('command') == command for e in entries for h in e.get('hooks', [])):
+            entries.append(({'matcher': matcher} if matcher else {}) | {'hooks': [{'type': 'command', 'command': command}]})
+    if json.dumps(data, sort_keys=True) != before:
         settings.write_text(json.dumps(data, indent=2) + '\n')
 
     ignore = ROOT / '.gitignore'
     have = ignore.read_text().splitlines() if ignore.exists() else []
-    want = ['.team/', '.claude/', 'team/team.local.json', 'team/**/handover.md', 'team/**/.archive.lock', 'team/.scheduled.lock', 'team/scheduled.out', 'team/.ci-seen.json']
+    want = ['.team/', '.claude/', 'team/team.local.json', 'team/**/handover.md', 'team/**/.archive.lock', 'team/.scheduled.lock', 'team/scheduled.out', 'team/.ci-seen.json', 'team/.capacity/']
     missing = [w for w in want if w not in have]
     if missing:
         with ignore.open('a') as f:

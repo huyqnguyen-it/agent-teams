@@ -86,12 +86,14 @@ A lead asks for a skill, not a person. Resource Manager decides:
 | Budget not met | WAIT |
 
 - **Only the PO starts, resumes or stops an agent.** That is the gate that keeps the ceiling.
-- The ceiling is `ceiling` in `team.config.json`; normally 1 or 2 run at once.
-- `.team/tools/capacity-check.sh` reads capacity at no token cost. A follow-up reuse on GREEN needs no Resource Manager agent.
+- **Reserve before every start or resume:** `.team/tools/resource-lease.py reserve <agent> <role> [--heavy]`. It answers `HIRE <agent> on <host>` and writes a lease with the agent's expected peak memory and load, or `WAIT <reason>`. `--heavy` means the brief has Docker builds or full suites. On `main` the PO starts a subagent; on another host it starts a headless worker (`multi-server.md`). The lease is released when the agent stops (a hook does it for subagents) or expires.
+- **Free room adapts to each machine:** a host fits when its free memory and load, after the unused part of its leases and its reserve, cover the estimate, and it has fewer than `maxAgents` leases. The estimate is learned from each role's past peaks. `resource-lease.py status` prints every host and `PICK <host>`, at no token cost.
+- The ceiling is `ceiling` in `team.config.json`: the most agents at once on all hosts together. It caps cost, not machine load: more machines do not raise it; only the owner does.
+- `.team/tools/capacity-check.sh` reads this machine's capacity at no token cost. Placement is a script, not an agent: the Resource Manager decides only hire or reuse when it is not obvious.
 - YELLOW: no new hires, capped runs only. RED: stop every run.
 - Only the owner can lift YELLOW, for one named task, in their own words. Nobody can lift RED. If capacity stays below GREEN, the PO tells the owner what is using the machine and asks; it does not lower limits itself.
 - A hire that must WAIT: the PO records it on the board and retries at the next step. Do not poll in a loop; a background wait uses `tools/capacity-check.sh` only where the session allows it.
-- No `docs/` folder is fine: briefs then say which conventions to follow from the existing code.
+- Conventions live with the code, never in `.team/`: linter and formatter config first, then the repo's `docs/code-standards.md` (or its existing `CLAUDE.md` / `CONTRIBUTING.md`), and workspace `docs/conventions.md` for rules shared by all repos. The brief names the file; the lead's review and the Auditor check against it. A problem found twice in review becomes a lint rule, or a line in that file if no tool can check it. With no convention file, the brief says which conventions to follow from the existing code.
 - Scale the audit to the risk: a small change in one module needs the lead's review, not a hired Auditor. Plans that cross a boundary or change a contract always get one.
 - Heavy commands (docker builds, large suites) run one at a time under `flock`; a short test run of a small project does not need it, and a wrapper command may not match a restricted allow list. Tests use the project `commands` in `team.config.json`, capped workers where the tool supports them, and throwaway containers.
 
@@ -132,7 +134,7 @@ Owner request, or a ticket (§6 Tickets) → PO priority → Lead plan → cross
 
 How the loop starts, where it waits for the owner, and the scheduled check: `.team/docs/work-loop.md`.
 
-**Retry limit.** A task gets at most `maxRounds` rounds (`team.config.json`, default 3). A round fails when the lead's review or the Auditor sends the work back, or the member reports BLOCKED; the lead records each on the ticket (`ticket.py comment <id> --note "round N failed: <why>"`). After the last failed round the lead stops the task and reports it; the PO moves the ticket to `waiting` and asks the owner on the board, with the evidence. No further round without the owner's answer. A fresh hire after a failure (§5) does not reset the count.
+**Retry limit.** A task gets at most `maxRounds` rounds (`team.config.json`, default 3). A round fails when the lead's review or the Auditor sends the work back, or the member reports BLOCKED; the lead records each with `ticket.py fail <id> --by <lead> --note "<why>"`. At the limit `ticket.py` moves the ticket to `waiting` and refuses `in-progress`; the PO asks the owner on the board, with the evidence. Only with the owner's answer does the PO move it on with `--owner-ok`, which starts the count again. A fresh hire after a failure (§5) does not reset the count.
 
 ### Tickets
 
@@ -198,6 +200,21 @@ Any provider works if it has a read-only command: telemetry or logs, an error tr
 6. Never read or print secrets.
 7. Automation uses local data, never shared environments.
 8. A permission denied to one agent is not routed through another.
+
+`init` makes the harness enforce what it can (`.claude/settings.json`), at no token cost:
+
+| Rule | Enforced by |
+|---|---|
+| Agents never push, tag or stash; a headless worker pushes only its feature branch | `team-hooks.py guard` (PreToolUse) |
+| The Auditor never fixes what it finds | The same hook: it writes only under `team/` |
+| No stop before the log entry, the journal entry and the journal compaction | `team-hooks.py stop` (SubagentStop) asks once |
+| `.team/` is never edited; tickets change through `ticket.py` only | `deny` rules for Edit and Write |
+| Secrets are not read: the GitLab token file, `~/.ssh`, `.env` files, keys | `deny` rules for Read (also `cat`, `head`, `sed`; not scripts or `grep -r`) |
+| No AI or co-author lines in commits and PRs | `attribution` |
+| Retry limit | `ticket.py fail` |
+| Capacity and the ceiling | `resource-lease.py reserve` |
+
+A hook rule is not a sandbox: the owner's protected branches in GitLab are the real gate for pushes.
 
 ### Writing
 
@@ -290,7 +307,8 @@ Team files never go into service repositories.
 - **Remote execution:** agents stay; heavy commands run through SSH or `DOCKER_HOST=ssh://`.
 - **Remote session:** Claude Code with Remote Control on the same account joins through `SendMessage`.
 - **Headless worker:** `ssh host 'claude -p "<brief>"'`, one task then exit. It needs its own login and a tight allow list.
-- Hosts are listed in `team.local.json`. Capacity and `flock` are per machine. Work moves by git.
+- Hosts are listed in `team.local.json`, each with `maxAgents`. `resource-lease.py` reads every host's capacity over SSH and places each hire; leases are kept on the main machine, because only the PO hires. `flock` is per machine. Work moves by git.
+- The main machine stays light: the PO, the board, tickets, git. Heavy work goes to other hosts. A large area can have its lead on another host, starting its own workers there, so only its result reaches the PO.
 
 How to set it up: `.team/docs/multi-server.md`.
 

@@ -11,6 +11,8 @@ Read, without changing anything:
 
 From these, work out the stack, frontend and backend folders, and the test, build and lint commands. Take commands only from what the files show; if unsure, leave one empty.
 
+Also note the convention files that already exist in each repository: linter and formatter config (`.editorconfig`, eslint, prettier, ruff, golangci, and the like), `docs/code-standards.md`, `CONTRIBUTING.md`, and workspace `docs/conventions.md`. List them in your summary to the owner. Do not write new ones: the Architect or the lead writes them from real work.
+
 ## 2. Ask the owner
 
 Ask with your question tool, in one round. Offer what you found as the first option.

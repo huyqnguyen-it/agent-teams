@@ -6,17 +6,19 @@
 # Resolved tickets alone do not wake it: they wait for the owner's GO or a release result, which arrives as a signal.
 # Skips when capacity is RED, when the previous run is still going, or when schedule.enabled is false
 # in team/team.local.json. Tools the headless PO may use: schedule.allowedTools (the owner's choice).
+# Every run is capped: schedule.maxTurns (60), schedule.maxBudgetUsd (3), schedule.timeoutMin (25).
 set -uo pipefail
 export LC_ALL=C
 LOCAL="team/team.local.json"
 CFG="team/team.config.json"
 [ -f "$CFG" ] || { echo "run from the workspace root" >&2; exit 2; }
 
-read -r ENABLED ALLOWED < <(python3 - "$LOCAL" <<'PY'
+read -r ENABLED ALLOWED TURNS BUDGET MINUTES < <(python3 - "$LOCAL" <<'PY'
 import json, sys
 try: s = json.load(open(sys.argv[1])).get('schedule', {})
 except OSError: s = {}
-print(str(s.get('enabled', False)).lower(), ','.join(s.get('allowedTools', [])) or '-')
+print(str(s.get('enabled', False)).lower(), ','.join(s.get('allowedTools', [])) or '-',
+      int(s.get('maxTurns', 60)), float(s.get('maxBudgetUsd', 3)), int(s.get('timeoutMin', 25)))
 PY
 )
 [ "$ENABLED" = "true" ] || exit 0
@@ -53,6 +55,6 @@ Waiting: $TRIAGE ticket(s) in triage, $RESOLVED resolved. New signals:
 ${SIGNALS:-none}
 Do only what needs no owner: hire an Observer for the signals, triage tickets, start or continue accepted work within capacity and the ceiling. Anything needing the owner (new scope, GO to merge, a task past its retry limit) goes to the board as a question and its ticket to waiting. Never merge, push or tag without the owner's GO recorded on the board. Stop when nothing is left that you can do alone; write your log and journal entries."
 
-ARGS=(-p "$PROMPT")
+ARGS=(-p "$PROMPT" --max-turns "$TURNS" --max-budget-usd "$BUDGET")
 [ "$ALLOWED" != "-" ] && ARGS+=(--allowedTools "$ALLOWED")
-claude "${ARGS[@]}"
+timeout "${MINUTES}m" claude "${ARGS[@]}" || echo "$(date +%H:%M) PO run ended with code $? (124 = timeout)"

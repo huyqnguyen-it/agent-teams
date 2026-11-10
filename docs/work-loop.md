@@ -96,7 +96,7 @@ The loop stops and waits for the owner at three points, on purpose. A scheduled 
 | Reopened ticket | `resolved` goes back to `in-progress` | Resolved again | `maxRounds` |
 | Learning | Every agent stops | — | `memory.md` under 40 lines; journal compaction |
 
-**Retry limit.** A round fails when the lead's review or the Auditor sends work back, or the member reports BLOCKED. The lead records each failed round on the ticket. After `maxRounds` (default 3) the task stops: the ticket goes to `waiting` and the owner is asked. Hiring a fresh agent does not reset the count. This is what keeps one hard task from burning tokens without end.
+**Retry limit.** A round fails when the lead's review or the Auditor sends work back, or the member reports BLOCKED. The lead records each failed round with `ticket.py fail`. After `maxRounds` (default 3) the task stops: `ticket.py` moves the ticket to `waiting`, refuses more work on it, and the owner is asked. Hiring a fresh agent does not reset the count. This is what keeps one hard task from burning tokens without end.
 
 ## Scheduled check
 
@@ -124,6 +124,7 @@ Set it up in `team/team.local.json` (per machine):
 "schedule": { "enabled": true, "allowedTools": ["Read", "Write", "Edit", "Glob", "Grep", "Agent", "Bash(.team/tools/ticket.py:*)"] }
 ```
 
+- Each run is capped: `maxTurns` (60), `maxBudgetUsd` (3) and `timeoutMin` (25) in `schedule`. Keep `timeoutMin` under the cron interval.
 - `allowedTools` is the owner's decision: a headless run is denied any tool not listed. Add the project's test and git commands only if you want scheduled runs to build.
 - A source's `check` command (in `team.config.json`) should be a cheap script that prints one line only when something is new. Without one, signals are found only when an Observer is hired.
 - Pick the interval by cost: an idle check is free, but each run that finds work starts a PO session.

@@ -27,13 +27,13 @@ The owner does these steps. Agents never set up credentials.
 
 ```json
 { "hosts": [
-  { "name": "pc2", "ssh": "pc2", "path": "~/workspace", "use": ["exec", "worker"] }
+  { "name": "pc2", "ssh": "pc2", "path": "~/workspace", "use": ["exec", "worker"], "maxAgents": 3 }
 ] }
 ```
 
-`use` values: `exec`, `worker`, `session`.
+`use` values: `exec`, `worker`, `session`. Only `worker` hosts take hires. `maxAgents` is a hard cap for that host (default: `capacity.maxAgents`); the real room is measured each time.
 
-8. Check it: `ssh pc2 'cd ~/workspace && .team/tools/capacity-check.sh'`.
+8. Check it: `.team/tools/resource-lease.py status` on the main machine prints a line for every host. `unreachable` means SSH failed.
 
 ## Choose how to use it
 
@@ -49,9 +49,13 @@ The code must be on that machine: push the feature branch first.
 ### Headless worker: one task, then it exits
 
 ```bash
+.team/tools/resource-lease.py reserve developer-3 developer      # HIRE developer-3 on pc2 ... (or WAIT)
 scp brief.md pc2:brief.md
-ssh pc2 'cd ~/workspace && timeout 280 ~/.local/bin/claude -p "$(cat ~/brief.md)" --model sonnet --max-budget-usd 2 --permission-mode acceptEdits --output-format json --allowedTools "Bash(git switch:*)" "Bash(git add:*)" "Bash(git commit:*)" "Bash(date:*)" "<test command rule>"'
+ssh pc2 'cd ~/workspace && TEAM_ROLE=developer timeout 280 ~/.local/bin/claude -p "$(cat ~/brief.md)" --model sonnet --max-turns 40 --max-budget-usd 2 --permission-mode acceptEdits --output-format json --allowedTools "Bash(git switch:*)" "Bash(git add:*)" "Bash(git commit:*)" "Bash(date:*)" "<test command rule>"'; .team/tools/resource-lease.py release developer-3
 ```
+
+- Reserve first and release after, in the same command, so a failed run still gives the room back. A lease left behind expires on its own.
+- `TEAM_ROLE` makes that machine's hooks treat the run as a team agent: it may push its feature branch, never main, tags or with force, and must write its log and journal entries.
 
 - Use the full path: `~/.local/bin` is not on `PATH` in a plain `ssh host 'command'`.
 - Always set a budget, and use `timeout` as well.
@@ -76,7 +80,7 @@ Start Claude Code with Remote Control on that machine, in `tmux`, on the same ac
 | Rule | Detail |
 |---|---|
 | One gate | Only the PO starts agents, on any machine |
-| Capacity per host | The Resource Manager reads each host's check, and answers `HIRE developer on pc2` |
+| Capacity per host | `resource-lease.py reserve` reads every host, reserves the room, and answers `HIRE developer-3 on pc2`. No agent spends tokens on placement |
 | Roster | Fill the `Host` column |
 | Files | No shared disk: work moves through git feature branches |
 | Pushing | Members may push feature branches only. Tags and protected branches stay with the PO; branch protection enforces it |
