@@ -5,4 +5,4 @@
 - **Status:** DONE | PARTIAL | BLOCKED. **Next:** who does what
 - **Lesson:** none | the journal entry or skill file written
 
-HH:MM is the real time: take it from the capacity check line or `date +%H:%M`, never a guess.
+HH:MM is the real time: take it from the capacity check line or `date +%H:%M`, never a guess. Short Simplified Technical English (team operating model §7, Writing).

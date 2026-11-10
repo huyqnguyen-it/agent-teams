@@ -84,6 +84,7 @@ The board is for decisions, not chat. Clicking an answer costs almost no tokens;
 
 - Only the PO adds a question, and only a real decision. If it only restates your recommendation and is local and reversible, apply it and report it.
 - One decision per question, standing on its own: the owner may read it days later.
+- Write it in short Simplified Technical English (team operating model §7, Writing): short sentences, the team words, exact values.
 - Set `priority`: the page puts `blocking` first, top left, with a marker. Fill `blocks` with what is held up, so the owner can see the cost of waiting.
 - Always include `recommendation`, and `options` when there are clear choices, recommended first.
 - Write `context` for reading, not as one paragraph. Separate lines with `\n`; the page renders them:

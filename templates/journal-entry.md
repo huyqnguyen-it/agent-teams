@@ -5,4 +5,4 @@
 - **Surprises:** what the code, tools or environment did that you did not expect. "none" if none
 - **Next time:** what the next agent in this role should do or avoid. If the same point is already in an older entry, write a skill instead (team operating model §11)
 
-HH:MM is the real time: take it from the capacity check line or `date +%H:%M`, never a guess. No secrets.
+HH:MM is the real time: take it from the capacity check line or `date +%H:%M`, never a guess. No secrets. Short Simplified Technical English (team operating model §7, Writing).

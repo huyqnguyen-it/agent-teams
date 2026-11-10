@@ -199,6 +199,35 @@ Any provider works if it has a read-only command: telemetry or logs, an error tr
 7. Automation uses local data, never shared environments.
 8. A permission denied to one agent is not routed through another.
 
+### Writing
+
+Everything an agent writes for another agent or the owner follows a short form of ASD-STE100 (Simplified Technical English): briefs, reports, log and journal entries, tickets, skills, board questions.
+
+1. One instruction per sentence, as a command: "Run the tests. Then read the output."
+2. Instructions up to 20 words; descriptions up to 25.
+3. Active voice: name who does it. "The lead verifies the release", not "the release is verified".
+4. One word, one meaning: use the team words below, and no synonyms for them.
+5. No idioms, no slang, no "-ing" verb forms where a plain verb works.
+6. Up to 6 sentences per paragraph. Put a warning before the step it applies to.
+7. Exact values: file:line, IDs, numbers with units, real times. Never "soon", "some" or "a few".
+
+Not covered: code, commands, commit messages (conventional commits), and quoted logs or evidence, which stay as they are. Technical names are allowed. The STE dictionary is not used.
+
+The lead and the Auditor send back text that breaks these rules. That is a fix, not a failed round.
+
+| Word | Means only |
+|---|---|
+| owner | The person who owns the workspace and gives GO |
+| ticket | One unit of work in `ticket.py` or the tracker |
+| plan | The lead's plan for one ticket or request |
+| round | One try at a task that ends in the lead's or the Auditor's verdict |
+| GO | The owner's approval to merge, push or tag |
+| accept / reject | A verdict on a ticket (PO) or on work (lead, Auditor) |
+| resolved / closed | Ticket states: work done / release verified |
+| DONE / BLOCKED | Report status of one agent's task |
+| hire / reuse | Start a new agent / resume an existing one |
+| signal | A new item that a source shows |
+
 ## 8. Work log
 
 Every agent appends to `team/log/YYMMDD.md` before stopping, using `.team/templates/work-report.md`: what it did, what it decided and why, evidence, status. A task with no entry is not done. The PO is an agent too: its last step in every session is its own entry (what it staffed, decided, and the state of the work) and an update of `team/status/board.md`. No secrets.

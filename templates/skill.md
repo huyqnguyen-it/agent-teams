@@ -11,4 +11,6 @@ author: <agent> · <plan>
 
 ## Steps
 
+<!-- One command per step, up to 20 words, active voice (team operating model §7, Writing). -->
+
 ## Worked when

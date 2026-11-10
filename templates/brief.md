@@ -10,6 +10,8 @@
 
 Commit messages carry no AI or co-author lines.
 
+Write this brief and your report in short Simplified Technical English (team operating model §7, Writing).
+
 Before stopping, append your entry to `team/log/YYMMDD.md` (format: `.team/templates/work-report.md`).
 
 End your report with: Status DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT.
