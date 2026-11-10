@@ -261,10 +261,11 @@ Repeated work with no judgment is a script. The second time an agent does the sa
 
 ## 11. Skills
 
-A skill is a short how-to proven on real work, written with `.team/templates/skill.md`. Under 30 lines; never a guess. Skills belong to the role, not the agent: a fresh member's lesson is kept in its role's folder for every later hire, or it is lost.
+A skill is a short how-to proven on real work, written with `.team/templates/skill.md`. `SKILL.md` stays under 30 lines; never a guess. Skills belong to the role, not the agent: a fresh member's lesson is kept in its role's folder for every later hire, or it is lost.
 
-- **Find:** before exploring, list the `description:` lines of your role skills (`team/roles/<role>/skills/`), `team/skills/` and `.team/skills/`, and open only the skills that match your task. Do not read them all.
-- **Write:** when a task took more than one try, will come back, or its lesson repeats in the role journal (§8). A new skill is `status: draft`, in `team/roles/<role>/skills/`. Only its author uses a draft; every other agent skips it.
+- **Layout:** every skill, in the template, `team/skills/` or a role, is a folder named after it: `<name>/SKILL.md` (frontmatter `name`, `description`; team and role skills add `status` and `author`), `scripts/` for code it runs, `assets/` for files it copies or fills (templates, example configs, samples). Add only the folders it needs. Template skills have no `status`: they are accepted. Moving or deleting a skill moves or deletes the whole folder.
+- **Find:** before exploring, list the `description:` lines of your role skills (`team/roles/<role>/skills/*/SKILL.md`), `team/skills/*/SKILL.md` and `.team/skills/*/SKILL.md` (`grep -H '^description:'`), and open only the skills that match your task. Do not read them all.
+- **Write:** when a task took more than one try, will come back, or its lesson repeats in the role journal (§8). A new skill is `status: draft`, in `team/roles/<role>/skills/<name>/SKILL.md`. Only its author uses a draft; every other agent skips it.
 - **Accept:** at PLAN COMPLETE the lead checks each draft from its plan against the work's evidence, then sets `status: accepted` (editing it if needed) or deletes it. Drafts from the PO, Resource Manager, Architect, DevOps or Observer are accepted by the PO at the end of that task. A draft not accepted by then is deleted; what was worth keeping goes to the journal.
 - **Use:** when a skill helped, update its `Last used` line with the date and the plan.
 - **Retire:** at PLAN COMPLETE the lead deletes the accepted skills of the roles in its plan that were not used in its last 5 plans, or that proved wrong, and says so in its journal. The PO does the same for `team/skills/` and the staff roles. Fewer skills keep every start cheap.
