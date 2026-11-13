@@ -14,6 +14,7 @@ The `.md` stays the source. The HTML is generated, so never edit it by hand: edi
 - "Required variables only" filter for tables with a `Required` column; a row is required when the cell starts with `yes` (any case), anything else is optional.
 - Checklist with a progress bar on one section's table, saved in the reader's browser.
 - Copy button on code blocks. ASCII diagrams stay as they are.
+- The page scrolls inside `main`, so it works in the Artifact viewer frame and as a standalone file.
 - Light and dark mode, phone layout, print layout. It works offline: no CDN, no fonts to fetch.
 
 ## Steps

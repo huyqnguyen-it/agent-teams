@@ -3,17 +3,18 @@
 :root{--bg:#f1f4f5;--surface:#fff;--raised:#f7f9fa;--ink:#17242a;--muted:#56666f;--line:#d5dee1;--accent:#0f6b78;--soft:#dff0f2;--on:#fff;--req:#a3480f;--req-soft:#fcecdd;--ok:#1f7a4d;--ok-soft:#e1f3e9;
 --body:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"DejaVu Sans Mono",monospace}
 @media (prefers-color-scheme:dark){:root{--bg:#0e1417;--surface:#172126;--raised:#1d292f;--ink:#e2eaed;--muted:#9bacb5;--line:#2a373e;--accent:#62c4d4;--soft:#14323a;--on:#0e1417;--req:#f2a766;--req-soft:#3a2614;--ok:#6fd09b;--ok-soft:#163126;color-scheme:dark}}
-*{box-sizing:border-box}html{scroll-padding-top:12px}
+*{box-sizing:border-box}html,body{height:100%;overflow:hidden}
 body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 var(--body)}
-.app{display:grid;grid-template-columns:272px minmax(0,1fr);min-height:100vh}
-nav{position:sticky;top:0;height:100vh;overflow:auto;background:var(--surface);border-right:1px solid var(--line);padding:14px}
+/* The page scrolls inside <main>, not the window: the window does not scroll inside the Artifact viewer frame. */
+.app{display:grid;grid-template-columns:272px minmax(0,1fr);height:100%}
+nav{height:100%;overflow:auto;background:var(--surface);border-right:1px solid var(--line);padding:14px}
 nav h1{font-size:1.05rem;margin:0}nav .ver{color:var(--muted);font-size:.78rem;margin-bottom:10px}
 input[type=search]{width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);font:inherit}
 .toggle{display:flex;gap:6px;align-items:center;margin:8px 0;color:var(--muted);font-size:.82rem}
 nav h2{font-size:.68rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:14px 0 4px}
 nav a{display:block;padding:3px 8px;border-radius:5px;color:var(--ink);text-decoration:none;font-size:.86rem;overflow-wrap:anywhere}
 nav a:hover{background:var(--soft)}nav a.on{background:var(--accent);color:var(--on)}
-main{padding:16px 22px 80px;min-width:0;display:grid;gap:14px;align-content:start}
+main{height:100%;overflow:auto;padding:16px 22px 80px;min-width:0;display:grid;gap:14px;align-content:start}
 section{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 18px;min-width:0}
 section[hidden]{display:none}
 section h2{font-size:1.2rem;margin:0 0 8px;overflow-wrap:anywhere}section h3{font-size:.98rem;margin:16px 0 6px}
@@ -34,8 +35,8 @@ pre code{background:none;padding:0;font-size:inherit;overflow-wrap:normal}
 .progt{color:var(--muted);font-size:.8rem}
 .none{color:var(--muted);padding:20px}
 del{color:var(--muted)}a{color:var(--accent)}:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-@media (max-width:900px){.app{display:block}nav{position:static;height:auto;max-height:45vh;border-right:0;border-bottom:1px solid var(--line)}main{padding:12px}}
-@media print{nav,.copy{display:none}.app{display:block}section{break-inside:avoid;border:0}}
+@media (max-width:900px){.app{display:flex;flex-direction:column}nav{flex:none;height:auto;max-height:45vh;border-right:0;border-bottom:1px solid var(--line)}main{flex:1;min-height:0;height:auto;padding:12px}}
+@media print{html,body{height:auto;overflow:visible}nav,.copy{display:none}.app{display:block;height:auto}main{height:auto;overflow:visible}section{break-inside:avoid;border:0}}
 </style></head><body><div class="app">
 <nav aria-label="Sections"><h1>Sample Service Deployment Guide</h1><div class="ver">Rev 2 · 2026-02-20</div>
 <input type="search" id="q" placeholder="Find a variable, service, path" aria-label="Find">
@@ -433,15 +434,18 @@ q.oninput=apply;ro.onchange=apply;
 // Menu: jump at once, mark the chosen item, and keep the mark in step with the scroll position.
 const mark=id=>links.forEach(a=>{const on=a.hash==='#'+id;a.classList.toggle('on',on);if(on)a.scrollIntoView({block:'nearest'})});
 let chosen=null;
+const main=$('main');
+const topOf=()=>main.getBoundingClientRect().top;
 const current=()=>{const shown=secs.filter(s=>!s.hidden);let id=shown[0]&&shown[0].id;
-  for(const s of shown){if(s.getBoundingClientRect().top<=80)id=s.id;else break}
+  for(const s of shown){if(s.getBoundingClientRect().top-topOf()<=80)id=s.id;else break}
   return id};
 let tick=false;
-addEventListener('scroll',()=>{if(tick)return;tick=true;requestAnimationFrame(()=>{tick=false;
-  if(chosen){const r=document.getElementById(chosen).getBoundingClientRect();if(Math.abs(r.top)>4&&innerHeight+scrollY<document.documentElement.scrollHeight-2)chosen=null}
-  mark(chosen||current())})},{passive:true});
+const onScroll=()=>{if(tick)return;tick=true;requestAnimationFrame(()=>{tick=false;
+  if(chosen){const r=document.getElementById(chosen).getBoundingClientRect();if(Math.abs(r.top-topOf())>4&&main.scrollTop+main.clientHeight<main.scrollHeight-2)chosen=null}
+  mark(chosen||current())})};
+main.addEventListener('scroll',onScroll,{passive:true});addEventListener('scroll',onScroll,{passive:true});
 links.forEach(a=>a.addEventListener('click',e=>{e.preventDefault();const id=a.hash.slice(1),t=document.getElementById(id);
   if(t.hidden){q.value='';ro.checked=false;apply()}
-  t.scrollIntoView({block:'start'});chosen=id;mark(id);history.replaceState(null,'','#'+id)}));
+  main.scrollTop+=t.getBoundingClientRect().top-topOf();chosen=id;mark(id);history.replaceState(null,'','#'+id)}));
 mark(location.hash?location.hash.slice(1):current());
 </script></body></html>
