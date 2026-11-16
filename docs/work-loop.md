@@ -63,6 +63,8 @@ Nothing in the loop runs unless a Product Owner session runs. Putting work in do
 
 When the PO runs, it starts with `ticket.py list --state triage` and `--state resolved`, and the board.
 
+At every PO step, the PO compares the open agents (`ListAgents`) with `team/status/roster.md`. It stops each agent the roster shows `stopped`, and each parked agent past its limit (`capacity-check.sh --parked-expired` lists them). Then it sets the roster row `stopped`. A parked agent is one the PO keeps for an expected follow-up; the limit is `PARK_TTL_MIN` (60).
+
 ## Who tracks the result
 
 The lead owns the final result: its plan is not over until the release is verified.

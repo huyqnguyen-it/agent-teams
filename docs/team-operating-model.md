@@ -85,7 +85,10 @@ A lead asks for a skill, not a person. Resource Manager decides:
 | Auditing | Always hire new |
 | Budget not met | WAIT |
 
-- **Only the PO starts, resumes or stops an agent.** That is the gate that keeps the ceiling.
+- **Only the PO starts, resumes, parks or stops an agent.** That is the gate that keeps the ceiling.
+- **At TASK DONE the PO checks the result, then stops the agent or parks it.** Stop: `TaskStop` (or end its process), then set the roster row `stopped`. Park only when a follow-up on the same task is expected: a rework round, a pending audit, owner feedback. Before a stop, the agent's log entry, journal entry and handover are written.
+- **Roster states:** `running`, `parked (since HH:MM)`, `stopped`. A parked agent holds memory, so it gets a time limit: the PO stops it after `PARK_TTL_MIN` minutes without a message (code default 60, env override). A message to the agent resets the timer.
+- **Parked and running agents both count against `ceiling`.** When a hire needs a slot, the PO stops the oldest parked agent first. `capacity-check.sh` prints `agents=N/ceiling` from the roster; `--parked-expired` prints each parked row past its limit.
 - **Reserve before every start or resume:** `.team/tools/resource-lease.py reserve <agent> <role> [--heavy]`. It answers `HIRE <agent> on <host>` and writes a lease with the agent's expected peak memory and load, or `WAIT <reason>`. `--heavy` means the brief has Docker builds or full suites. On `main` the PO starts a subagent; on another host it starts a headless worker (`multi-server.md`). The lease is released when the agent stops (a hook does it for subagents) or expires.
 - **Free room adapts to each machine:** a host fits when its free memory and load, after the unused part of its leases and its reserve, cover the estimate, and it has fewer than `maxAgents` leases. The estimate is learned from each role's past peaks. `resource-lease.py status` prints every host and `PICK <host>`, at no token cost.
 - The ceiling is `ceiling` in `team.config.json`: the most agents at once on all hosts together. It caps cost, not machine load: more machines do not raise it; only the owner does.
@@ -103,6 +106,7 @@ Messages:
 STAFF? be-lead developer repo-x tests new-feature
 HIRE developer-1 | REUSE developer-1 | WAIT <reason>
 TASK DONE developer-1
+PARK developer-1 | STOP developer-1
 PLAN COMPLETE <plan> | PLAN PARTIAL <plan>: <what is left>
 ```
 
@@ -115,7 +119,8 @@ Cost follows context size. The ceiling is not a target.
 | Rule | Why |
 |---|---|
 | Resume only within the hour, for the same task | The prompt cache makes it cheap |
-| Next day or next plan: fresh agent from `handover.md` | A short handover costs far less than a full context |
+| Stop a finished agent; park it only for an expected follow-up, for `PARK_TTL_MIN` (60) minutes | An idle agent holds memory; after the cache window (about 1 hour) a resume pays the whole old context again |
+| Next day, next plan, or after the park limit: fresh agent from `handover.md` and the role journal | A short handover costs far less than a full context |
 | Save lessons to `skills/` | The next agent reads one file |
 | Delegate reading | Leads keep small contexts |
 | Cheapest model that fits | Scripts first, then the smallest model |

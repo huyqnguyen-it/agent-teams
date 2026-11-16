@@ -40,7 +40,7 @@ Without Claude: `.team/init.sh` asks in the terminal, and `.team/init.sh --yes` 
 | `docs/instruction-topology.md` | Which file tells which agent what, and which one wins |
 | `roles/` | Role definitions |
 | `templates/` | Brief, design review, plan-complete, work report, journal entry, journal memory, skill |
-| `tools/` | `capacity-check.sh`, `journal-archive.sh`, `ticket.py` (Markdown tickets, or the configured tracker), `scheduled-check.sh` (wakes the PO when work waits), `gitlab-pipelines.py` (GitLab CI results, read-only), `gitlab-setup.sh` (the owner saves the GitLab URL and token, once per machine), `resource-lease.py` (places and reserves each hire across hosts), `team-hooks.py` (Claude Code hooks that enforce team rules) |
+| `tools/` | `capacity-check.sh` (also counts open agents against `ceiling`; `--parked-expired`), `journal-archive.sh`, `ticket.py` (Markdown tickets, or the configured tracker), `scheduled-check.sh` (wakes the PO when work waits), `gitlab-pipelines.py` (GitLab CI results, read-only), `gitlab-setup.sh` (the owner saves the GitLab URL and token, once per machine), `resource-lease.py` (places and reserves each hire across hosts), `team-hooks.py` (Claude Code hooks that enforce team rules) |
 | `skills/` | Generic skills: `md-guide-to-html`, `team-board` |
 
 No secrets, internal hosts or project details belong here.
