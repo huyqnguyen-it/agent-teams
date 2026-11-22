@@ -86,6 +86,7 @@ Use the long-lived token in PO containers. Multica can also hold a credential as
 
 ## Many servers
 
+- **Access from the LAN.** The server listens on localhost only. For other machines, put a proxy on the LAN address in front of it: WebSocket paths (`/ws`, `/collab`) go to the backend, the rest to the web app. Set `FRONTEND_ORIGIN` and `CORS_ALLOWED_ORIGINS` in `.env` to the address people open, or the backend refuses them. Without the proxy the pages load but live updates do not arrive.
 - **A daemon needs only an outbound connection to the Multica server.** A machine you cannot reach by SSH can still take work. Put the server behind a reverse proxy with TLS for other machines; do not publish its ports directly.
 - **A runtime is one machine plus one agent CLI.** An agent is bound to one runtime: put each PO agent on its own workspace's container.
 - **A pool shared by two workspaces:** each PO keeps its own leases, so it does not see the other's hires. Set `maxAgents` low on that host, or give each workspace its own pool.
