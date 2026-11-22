@@ -34,7 +34,9 @@ def ask(question, default):
 
 def detect_capacity():
     """Suggest limits from this machine: hire above 20 % free memory, stop below 15 %, load limit = cores."""
-    total_gb = os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES') / 2**30
+    # /proc/meminfo, not sysconf: in a container with a memory limit, sysconf reports the host's memory.
+    with open('/proc/meminfo') as f:
+        total_gb = next(int(line.split()[1]) for line in f if line.startswith('MemTotal:')) / 2**20
     return {'minAvailGb': round(total_gb * .2, 1), 'stopAvailGb': round(total_gb * .15, 1),
             'maxLoad5': os.cpu_count() or 4, 'stopDiskPct': 85}
 
