@@ -72,6 +72,8 @@ Read team/roles/product-owner/handover.md and team/status/board.md first.
 | GitLab API token | Each container, in `~/.config/agent-team/gitlab.env` | The git key carries git only: CI results need this token. One per container, for that workspace's GitLab server, scope `read_api` only. The owner runs `.team/tools/gitlab-setup.sh` in the container; check with `gitlab-pipelines.py whoami` |
 | Cluster access | The DevOps container only | See below |
 
+An old GitLab has no `read_api` scope: its API accepts only the `api` scope, which can also write. There, create the token for a separate user with the Reporter role on the projects, so the token can read pipelines and nothing more.
+
 Claude Code has two kinds of login:
 
 | | Long-lived token (`claude setup-token`, `CLAUDE_CODE_OAUTH_TOKEN`) | Full login (`/login`) |
@@ -79,8 +81,6 @@ Claude Code has two kinds of login:
 | Headless runs, which is how Multica starts the PO | Yes | Yes |
 | Remote Control, claude.ai connectors, Artifact tools | No | Yes |
 | Set up with no browser on that machine | Yes | No |
-
-An old GitLab has no `read_api` scope: its API accepts only the `api` scope, which can also write. There, create the token for a separate user with the Reporter role on the projects, so the token can read pipelines and nothing more.
 
 Use the long-lived token in PO containers. Multica can also hold a credential as an agent environment variable, but it stores the value as plain text in its database: keep high-value tokens in the container.
 
