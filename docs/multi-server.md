@@ -10,6 +10,7 @@ Use this when one machine is not enough. Local agents are light: tests, Docker s
 | You need more members working at once, and the local machine is full | Headless worker |
 | A role needs to keep context on another machine | Remote session |
 | A whole area should run separately, with its own lead and members | Department (later phase) |
+| Several workspaces, accounts or machines to see and start from one board | Multica (`multica.md`) |
 
 Each machine adds token cost. Moving work does not make it cheaper.
 

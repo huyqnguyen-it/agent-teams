@@ -39,6 +39,7 @@ Releases are git tags (`v0.1.0`, ...). To stay on one release: `git -C .team fet
 | `docs/team-operating-model.md` | The rules |
 | `docs/work-loop.md` | How work goes round: who starts it, the owner's gates, retry limit, scheduled check |
 | `docs/multi-server.md` | Running the team on several machines |
+| `docs/multica.md` | Advanced: Multica as the board that starts each workspace's PO, for several workspaces, accounts and machines |
 | `docs/instruction-topology.md` | Which file tells which agent what, and which one wins |
 | `roles/` | Role definitions |
 | `templates/` | Brief, design review, plan-complete, work report, journal entry, journal memory, skill |
@@ -58,5 +59,6 @@ No secrets, internal hosts or project details belong here.
 - `init` adds to `.claude/settings.json`: the team tools to `allow`; `deny` rules for secrets, `.team/` and ticket files; `attribution` with no AI lines; and the `team-hooks.py` hooks (team operating model §7). Git and test commands are not added: whether it may add them is the owner's decision.
 - The `.env` deny rules also hide `.env.example`. Remove that rule from `.claude/settings.json` if agents need it.
 - Workers on other machines may use other accounts and other agent CLIs. Only Claude Code runs the team hooks; Codex and Cursor runs are tested with stub CLIs only.
+- Multica (`docs/multica.md`): tried once on one machine, two workspaces in containers, a setup-check issue each. Real work through it is not tested.
 - Learned resource estimates need samples: on the main machine the hooks take one a minute while agents work; other hosts are sampled only when `resource-lease.py` runs.
 - There are no tests for `init.py`. A skill removed from the template leaves a dangling link in `.claude/skills/` until deleted by hand.
