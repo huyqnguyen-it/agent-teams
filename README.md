@@ -30,6 +30,8 @@ Without Claude: `.team/init.sh` asks in the terminal, and `.team/init.sh --yes` 
 
 `git -C .team pull`, then `.team/init.sh`.
 
+Releases are git tags (`v0.1.0`, ...). To stay on one release: `git -C .team fetch --tags && git -C .team checkout v0.1.0`, then `.team/init.sh`.
+
 ## In this repository
 
 | Path | Contents |
@@ -40,7 +42,7 @@ Without Claude: `.team/init.sh` asks in the terminal, and `.team/init.sh --yes` 
 | `docs/instruction-topology.md` | Which file tells which agent what, and which one wins |
 | `roles/` | Role definitions |
 | `templates/` | Brief, design review, plan-complete, work report, journal entry, journal memory, skill |
-| `tools/` | `capacity-check.sh`, `journal-archive.sh`, `ticket.py` (Markdown tickets, or the configured tracker), `scheduled-check.sh` (wakes the PO when work waits), `gitlab-pipelines.py` (GitLab CI results, read-only), `gitlab-setup.sh` (the owner saves the GitLab URL and token, once per machine), `resource-lease.py` (places and reserves each hire across hosts), `team-hooks.py` (Claude Code hooks that enforce team rules) |
+| `tools/` | `capacity-check.sh`, `journal-archive.sh`, `ticket.py` (Markdown tickets, or the configured tracker), `scheduled-check.sh` (wakes the PO when work waits), `gitlab-pipelines.py` (GitLab CI results, read-only), `gitlab-setup.sh` (the owner saves the GitLab URL and token, once per machine), `resource-lease.py` (places and reserves each hire across hosts), `team-hooks.py` (Claude Code hooks that enforce team rules), `host-join.sh` (joins a machine as a worker), `worker-run.sh` (runs one brief with that machine's CLI: Claude Code, Codex, Cursor or a custom command) |
 | `skills/` | Generic skills: `md-guide-to-html`, `team-board` |
 
 No secrets, internal hosts or project details belong here.
@@ -55,5 +57,6 @@ No secrets, internal hosts or project details belong here.
 - In a headless run, `.claude/settings.json` rules are ignored until the workspace is trusted, and agents are denied any command not on `--allowedTools`; pass the list on the command line.
 - `init` adds to `.claude/settings.json`: the team tools to `allow`; `deny` rules for secrets, `.team/` and ticket files; `attribution` with no AI lines; and the `team-hooks.py` hooks (team operating model §7). Git and test commands are not added: whether it may add them is the owner's decision.
 - The `.env` deny rules also hide `.env.example`. Remove that rule from `.claude/settings.json` if agents need it.
+- Workers on other machines may use other accounts and other agent CLIs. Only Claude Code runs the team hooks; Codex and Cursor runs are tested with stub CLIs only.
 - Learned resource estimates need samples: on the main machine the hooks take one a minute while agents work; other hosts are sampled only when `resource-lease.py` runs.
 - There are no tests for `init.py`. A skill removed from the template leaves a dangling link in `.claude/skills/` until deleted by hand.
