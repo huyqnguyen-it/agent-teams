@@ -10,7 +10,8 @@ Where each instruction lives, who reads it, and which one wins. Read this when a
                               ▼
  Session start ──► CLAUDE.md (workspace)
                      ├─ workspace rules, docs/
-                     └─ @.team/docs/team-operating-model.md   the team rules
+                     ├─ @.team/docs/team-operating-model.md   the team rules
+                     └─ @team/rules.md                         this workspace's rules; they win
                               │
               ┌───────────────┴────────────────┐
               ▼                                ▼
@@ -50,6 +51,8 @@ Agent definitions load when a session starts: after `init`, start a new session.
 | `.claude/agents/` | `init` | Generated: do not edit |
 | `CLAUDE.md` | Owner; `init` adds one section | Rarely |
 | `team/team.config.json` | Owner, through setup | When the team changes |
+| `team/rules.md` | PO, with the owner's decision and its date | When the owner decides a rule for this workspace |
+| `docs/`, `plans/` | Architect and leads; any kit the workspace uses sets the format | In the same plan as the change |
 | `team/roles/<role>/profile.md` | `init`; PO with the owner's OK | Scope changes |
 | `team/status/roster.md` | Resource Manager | On each hire or release |
 | `team/status/board.md` | Product Owner | On each change of status |

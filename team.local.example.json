@@ -8,7 +8,8 @@
     "perAgentGb": 2,
     "perAgentLoad": 1,
     "heavyGb": 4,
-    "heavyLoad": 2
+    "heavyLoad": 2,
+    "heavySlots": 1
   },
   "boardUrl": "",
   "hosts": [

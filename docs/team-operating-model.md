@@ -95,7 +95,7 @@ A lead asks for a skill, not a person. Resource Manager decides:
 - A hire that must WAIT: the PO records it on the board and retries at the next step. Do not poll in a loop; a background wait uses `tools/capacity-check.sh` only where the session allows it.
 - Conventions live with the code, never in `.team/`: linter and formatter config first, then the repo's `docs/code-standards.md` (or its existing `CLAUDE.md` / `CONTRIBUTING.md`), and workspace `docs/conventions.md` for rules shared by all repos. The brief names the file; the lead's review and the Auditor check against it. A problem found twice in review becomes a lint rule, or a line in that file if no tool can check it. With no convention file, the brief says which conventions to follow from the existing code.
 - Scale the audit to the risk: a small change in one module needs the lead's review, not a hired Auditor. Plans that cross a boundary or change a contract always get one.
-- Heavy commands (docker builds, large suites) run one at a time under `flock`; a short test run of a small project does not need it, and a wrapper command may not match a restricted allow list. Tests use the project `commands` in `team.config.json`, capped workers where the tool supports them, and throwaway containers.
+- Heavy commands (docker builds, large suites, package installs) run through `.team/tools/heavy.sh <command>`: one at a time on a machine, or up to `capacity.heavySlots` in `team.local.json` while the machine is GREEN. A short test run of a small project does not need it, and a wrapper command may not match a restricted allow list. Tests use the project `commands` in `team.config.json`, capped workers where the tool supports them, and throwaway containers.
 
 Messages:
 
@@ -169,7 +169,7 @@ Every piece of work is a ticket, the owner's own requests included, so the team 
 - An Observer's ticket about a problem after a release names the release ticket in `--source`, so the problem traces back to the change.
 - A closed or rejected ticket leaves `team/tickets/` for `team/tickets/archive/YYMM/`; it is never edited again, and git keeps it. Only open tickets stay in view.
 - `ticket.py` refuses a move outside this flow. Each move and `comment` is added to the ticket's history with who and when.
-- **Every work session**, and every scheduled check (`.team/docs/work-loop.md`), the PO starts with `ticket.py list --state triage` and `--state resolved`, and each lead with `ticket.py list --owner <role>`. A plan names its ticket on the board.
+- **Every work session**, and every scheduled check (`.team/docs/work-loop.md`), the PO starts with `ticket.py list --state triage` and `--state resolved`, and each lead with `ticket.py list --owner <role>`. A plan names its ticket on the board. The PO also runs `.team/tools/template-version.sh` once a day; when it prints UPDATE, the PO tells the owner.
 - A ticket never holds secrets or personal data: IDs, counts and the query used, not values.
 
 ### Signals
@@ -191,6 +191,8 @@ Any provider works if it has a read-only command: telemetry or logs, an error tr
 - An Observer measuring the effect of a change is never the agent that built it.
 
 ## 7. Team rules
+
+**Workspace rules.** `team/rules.md` holds this workspace's own rules: the owner's decisions that add to these rules or make them stricter, each with its date. Where the two differ, the workspace rule wins. The PO writes a decision there when the owner gives it. The team never edits `.team/`. A rule, tool or skill that fits every workspace becomes a template proposal: the team uses its own copy in `team/` now, and the PO opens a ticket of kind `template` that names the file and says why it is general. The owner sends it to whoever maintains the template; after the release, the workspace updates and deletes its copy.
 
 1. Only the PO pushes protected branches or tags, after the owner's GO for that action.
 2. A member works in one repository or worktree and never runs `git stash`.
@@ -271,6 +273,24 @@ The limits are `JOURNAL_MAX_DAYS` (7) and `JOURNAL_KEEP_DAYS` (2). If `memory.md
 ## 9. Talking to the owner
 
 The PO keeps one board (`boardUrl`, created with the `team-board` skill), reads it at every step, and only asks real decisions, each with a recommendation. Push notifications are for blockers only.
+
+### Knowledge
+
+What is true for everyone lives in the workspace, in git, never in `.team/` and never only in a journal.
+
+| Knowledge | Where | Who keeps it |
+|---|---|---|
+| Architecture, design, glossary | Workspace `docs/` | Architect, in the same plan as the change |
+| Conventions of one repository | That repository (§5) | Its lead |
+| Product and engineering decisions of the owner | `docs/`, one decision file: dated, the later one wins, replaced ones listed | PO, when the owner answers |
+| Team decisions of the owner (ceiling, heavy jobs) | `team/rules.md` | PO, when the owner answers |
+| Plans | `plans/`, committed; the brief and the ticket name the path | The lead of the plan |
+
+- A document starts with the header in `.team/templates/knowledge-doc.md`: status, last check, sources. A source is in the repository or is a link; never a file only one machine has.
+- `docs/` has one index file that lists the documents. An agent reads the index first.
+- At PLAN COMPLETE the lead moves a fact every role needs from the journals to `docs/`.
+- A worker on another machine gets plans and docs only through git: commit and push them before the hire.
+- The Observer may flag a document with an old last-check date, or one that differs from the code.
 
 ## 10. Scripts before agents
 

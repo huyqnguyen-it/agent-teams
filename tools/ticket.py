@@ -25,7 +25,7 @@ import argparse, datetime, json, os, pathlib, secrets, shlex, subprocess, sys
 
 DIR = pathlib.Path(os.environ.get('TEAM_TICKETS', 'team/tickets'))
 CFG = pathlib.Path(os.environ.get('TEAM_CONFIG', 'team/team.config.json'))
-KINDS = ('bug', 'requirement', 'docs', 'ops', 'task')
+KINDS = ('bug', 'requirement', 'docs', 'ops', 'task', 'template')  # template: a proposal for the team template
 FLOW = {'triage': {'accepted', 'waiting', 'rejected'}, 'waiting': {'accepted', 'rejected'},
         'accepted': {'in-progress', 'triage'}, 'in-progress': {'resolved', 'triage', 'waiting'},
         'resolved': {'closed', 'in-progress'}}

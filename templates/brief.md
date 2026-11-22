@@ -1,14 +1,14 @@
 # Brief
 
 - **Task:**
-- **Plan and phase:**
+- **Plan and phase:** path under `plans/`, committed (and pushed, for a worker on another machine)
 - **Ticket:** id, or none
 - **Repo or worktree, branch:**
 - **Files to change / read:**
 - **Conventions:** the convention file and lint command of this repo, or "follow the existing code in <path>"
 - **Done when:**
 - **Resources:** host, reserved memory and load (from `resource-lease.py reserve`), heavy yes or no
-- **Limits:** capped workers where the tool supports them; heavy commands (docker builds, large suites) under `flock`, a small project's test run is not heavy; no push or tag; never read Secrets
+- **Limits:** capped workers where the tool supports them; heavy commands (docker builds, large suites) through `.team/tools/heavy.sh`, a small project's test run is not heavy; no push or tag; never read Secrets
 
 Commit messages carry no AI or co-author lines.
 

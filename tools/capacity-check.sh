@@ -18,7 +18,12 @@ A=$(free -m | awk '/Mem/{printf "%.1f", $7/1024}')
 SW=$(free -m | awk '/Swap/{ if($2>0) printf "%.0f", $3/$2*100; else print 0}')
 # Host out-of-memory only: a container hitting its own limit logs "Memory cgroup out of memory" and is not a host shortage.
 OOM=$(journalctl -k --since -6min 2>/dev/null | grep -i "out of memory" | grep -vci "memory cgroup")
-HEAVY=$(pgrep -fc 'jest|vitest|docker build')
+# Heavy jobs: one per job. Count a jest/vitest/next/docker-build process only when its parent is not one too
+# (workers and re-spawned children are skipped); a shell that only mentions the words is skipped.
+HEAVY=$(ps -eo pid=,ppid=,args= | awk '
+  { pid=$1; pp[pid]=$2; $1=""; $2=""; a[pid]=substr($0,3) }
+  function heavy(s) { return s ~ /^[^ ]*node .*\/\.bin\/(jest|vitest|next)( |$)/ || s ~ /^docker build / }
+  END { n=0; for (p in a) if (heavy(a[p]) && !heavy(a[pp[p]])) n++; print n }')
 ST=GREEN
 awk -v l="$L" -v m="$MAXL" 'BEGIN{exit !(l<m)}' || ST=YELLOW
 awk -v a="$A" -v m="$MINA" 'BEGIN{exit !(a>m)}' || ST=YELLOW

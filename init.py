@@ -75,11 +75,15 @@ def main():
     cfg.setdefault('tracker', example.get('tracker', {'provider': 'markdown'}))
     cfg.setdefault('maxRounds', example.get('maxRounds', 3))
     cfg['models'] = {**example['models'], **cfg['models']}  # a role added to the template gets its default model
+    # The template release this workspace runs: a tag, or tag-commits-hash between releases.
+    version = subprocess.run(['git', '-C', str(TPL), 'describe', '--tags', '--always'], capture_output=True, text=True).stdout.strip()
+    cfg['templateVersion'] = version or cfg.get('templateVersion', 'unknown')
     cap = {**detect_capacity(), **local.get('capacity', {})}
     for key in cap:
         cap[key] = float(ask(f'Capacity {key}', cap[key]))
     cap['stopDiskPct'] = int(cap['stopDiskPct'])
-    local = {'capacity': cap, 'boardUrl': ask('Team board URL (empty for none)', local.get('boardUrl', '')),
+    # Keep keys init does not ask about ("worker", written by host-join.sh).
+    local = {**local, 'capacity': cap, 'boardUrl': ask('Team board URL (empty for none)', local.get('boardUrl', '')),
              'hosts': local.get('hosts', []),
              'schedule': local.get('schedule', {'enabled': False, 'allowedTools': []})}
 
@@ -88,6 +92,7 @@ def main():
     (TEAM / 'team.local.json').write_text(json.dumps(local, indent=2) + '\n')
     sk = TPL / 'skeleton'
     write_new(TEAM / 'README.md', (sk / 'README.md').read_text())
+    write_new(TEAM / 'rules.md', (sk / 'rules.md').read_text())
     (TEAM / 'tickets').mkdir(exist_ok=True)
     for name in ('roster.md', 'board.md'):
         write_new(TEAM / 'status' / name, (sk / 'status' / name).read_text())
@@ -151,7 +156,8 @@ def main():
     perms = data.setdefault('permissions', {})
     allow, deny = perms.setdefault('allow', []), perms.setdefault('deny', [])
     allow.extend(r for r in [f'Bash(.team/tools/{t})' for t in ('capacity-check.sh', 'journal-archive.sh:*', 'ticket.py:*',
-                 'scheduled-check.sh', 'gitlab-pipelines.py:*', 'resource-lease.py:*')] if r not in allow)
+                 'scheduled-check.sh', 'gitlab-pipelines.py:*', 'resource-lease.py:*', 'heavy.sh:*',
+                 'template-version.sh')] if r not in allow)
     # Enforced by the harness, not only written in the rules (team operating model §7):
     deny.extend(r for r in ['Read(~/.config/agent-team/**)',  # the owner's GitLab token: tools use it, agents never read it
                             'Read(~/.ssh/**)', 'Read(**/.env)', 'Read(**/.env.*)', 'Read(**/*.pem)', 'Read(**/*.key)',
@@ -192,7 +198,11 @@ def main():
             f.write(f'\n## Agent team\n\nTeam rules: {note}\nThe main session is the Product Owner.\n\n'
                     '| Need | Where |\n|---|---|\n| Roles, templates, shared tools and skills | `.team/` (never edit) |\n'
                     '| Status, roster, board, tickets, log, handovers | `team/` |\n| Workspace skills and tools | `team/skills/`, `team/tools/` |\n')
-    print('Team ready. Roles:', ', '.join(cfg['roles']))
+    rules = '@team/rules.md'
+    if rules not in claude.read_text():  # also for a workspace set up before workspace rules existed
+        with claude.open('a') as f:
+            f.write(f'\nWorkspace rules (they win over the team rules): {rules}\n')
+    print(f"Team ready (template {cfg['templateVersion']}). Roles:", ', '.join(cfg['roles']))
     print(subprocess.run([str(TPL / 'tools' / 'capacity-check.sh')], capture_output=True, text=True).stdout.strip())
 
 

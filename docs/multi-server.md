@@ -48,7 +48,7 @@ ssh pc2 'cd ~/workspace && git fetch && git switch <branch> && <test command>'
 DOCKER_HOST=ssh://pc2 docker compose up -d
 ```
 
-The code must be on that machine: push the feature branch first.
+The code must be on that machine: push the feature branch first, with its plan and any docs the task needs.
 
 ### Headless worker: one task, then it exits
 

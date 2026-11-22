@@ -21,6 +21,7 @@ Without Claude: `.team/init.sh` asks in the terminal, and `.team/init.sh --yes` 
 |---|---|---|
 | `.team/` | This template: never edit it in a workspace | Ignored |
 | `team/team.config.json` | Shared settings | Committed |
+| `team/rules.md` | This workspace's own rules: the owner's dated decisions | Committed |
 | `team/team.local.json` | This machine's limits | Ignored |
 | `team/status/`, `team/tickets/`, `team/roles/`, `team/skills/`, `team/tools/`, `team/log/` | Workspace team data | Committed, except handovers |
 | `.claude/agents/`, `.claude/skills/` | Generated | Ignored |
@@ -30,7 +31,9 @@ Without Claude: `.team/init.sh` asks in the terminal, and `.team/init.sh --yes` 
 
 `git -C .team pull`, then `.team/init.sh`.
 
-Releases are git tags (`v0.1.0`, ...). To stay on one release: `git -C .team fetch --tags && git -C .team checkout v0.1.0`, then `.team/init.sh`.
+Releases are git tags (`v0.2.0`, ...). To stay on one release: `git -C .team fetch --tags && git -C .team checkout v0.2.0`, then `.team/init.sh`. `init` records the version in `team/team.config.json`; `.team/tools/template-version.sh` says when a newer release exists.
+
+A workspace never edits `.team/`. Its own rules go in `team/rules.md`, its own tools in `team/tools/`. A change that fits every workspace is a template proposal: a ticket of kind `template`, sent to whoever maintains this repository.
 
 ## In this repository
 
@@ -42,8 +45,8 @@ Releases are git tags (`v0.1.0`, ...). To stay on one release: `git -C .team fet
 | `docs/multica.md` | Advanced: Multica as the board that starts each workspace's PO, for several workspaces, accounts and machines |
 | `docs/instruction-topology.md` | Which file tells which agent what, and which one wins |
 | `roles/` | Role definitions |
-| `templates/` | Brief, design review, plan-complete, work report, journal entry, journal memory, skill |
-| `tools/` | `capacity-check.sh`, `journal-archive.sh`, `ticket.py` (Markdown tickets, or the configured tracker), `scheduled-check.sh` (wakes the PO when work waits), `gitlab-pipelines.py` (GitLab CI results, read-only), `gitlab-setup.sh` (the owner saves the GitLab URL and token, once per machine), `resource-lease.py` (places and reserves each hire across hosts), `team-hooks.py` (Claude Code hooks that enforce team rules), `host-join.sh` (joins a machine as a worker), `worker-run.sh` (runs one brief with that machine's CLI: Claude Code, Codex, Cursor or a custom command) |
+| `templates/` | Brief, design review, plan-complete, work report, journal entry, journal memory, skill, knowledge document header |
+| `tools/` | `capacity-check.sh`, `journal-archive.sh`, `ticket.py` (Markdown tickets, or the configured tracker), `scheduled-check.sh` (wakes the PO when work waits), `gitlab-pipelines.py` (GitLab CI results, read-only), `gitlab-setup.sh` (the owner saves the GitLab URL and token, once per machine), `resource-lease.py` (places and reserves each hire across hosts), `team-hooks.py` (Claude Code hooks that enforce team rules), `host-join.sh` (joins a machine as a worker), `worker-run.sh` (runs one brief with that machine's CLI: Claude Code, Codex, Cursor or a custom command), `heavy.sh` (runs a heavy command under the machine's limit), `template-version.sh` (this workspace's template version and the newest release) |
 | `skills/` | Generic skills: `md-guide-to-html`, `team-board` |
 
 No secrets, internal hosts or project details belong here.
