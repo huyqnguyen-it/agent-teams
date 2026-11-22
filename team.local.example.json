@@ -20,9 +20,24 @@
         "exec",
         "worker"
       ],
-      "maxAgents": 3
+      "maxAgents": 3,
+      "cli": "claude"
     }
   ],
+  "worker": {
+    "cli": "claude",
+    "cmd": "",
+    "model": "sonnet",
+    "maxTurns": 40,
+    "maxBudgetUsd": 2,
+    "timeoutMin": 20,
+    "allowedTools": [
+      "Bash(git switch:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(date:*)"
+    ]
+  },
   "schedule": {
     "enabled": false,
     "allowedTools": [

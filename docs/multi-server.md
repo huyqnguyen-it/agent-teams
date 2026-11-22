@@ -17,23 +17,26 @@ Each machine adds token cost. Moving work does not make it cheaper.
 
 The owner does these steps. Agents never set up credentials.
 
-1. Install Claude Code and sign in (not needed for remote execution only). A second account needs a seat or API key your plan allows.
+Each machine can use its own account and its own agent CLI: Claude Code (`claude`), Codex (`codex`) or Cursor (`cursor`). Any other CLI works through `worker.cmd`.
+
+1. Install the agent CLI and sign in, with that machine's account (not needed for remote execution only).
 2. Add SSH key access from the main machine, with a name in `~/.ssh/config`.
 3. Clone the workspace repositories, and `.team/`, at the same relative paths.
 4. Set a git identity there (`git config user.name`, `user.email`). A fresh machine has none, and a worker cannot commit without it.
 5. Run `.team/init.sh --yes` there, so capacity limits suit that machine.
 6. If it runs the scheduled check or a lead that tracks GitLab CI: run `.team/tools/gitlab-setup.sh` there, in a terminal on that machine (`SETUP.md`, GitLab CI). Use a token for that machine, so it can be revoked alone.
-7. Add it to `team/team.local.json` on the main machine:
+7. Join, on that machine, from the workspace root: `.team/tools/host-join.sh --cli codex [--model M]`. It checks the CLI, the git identity, `team/` and capacity, saves `worker` in that machine's `team/team.local.json`, and prints the next command.
+8. Add, on the main machine: `.team/tools/host-join.sh add pc2 pc2 /home/me/workspace [--max 3]` (name, ssh name, absolute path on that machine). It runs the check over SSH and writes the host into `team/team.local.json`:
 
 ```json
 { "hosts": [
-  { "name": "pc2", "ssh": "pc2", "path": "~/workspace", "use": ["exec", "worker"], "maxAgents": 3 }
+  { "name": "pc2", "ssh": "pc2", "path": "/home/me/workspace", "use": ["exec", "worker"], "cli": "codex", "maxAgents": 3 }
 ] }
 ```
 
-`use` values: `exec`, `worker`, `session`. Only `worker` hosts take hires. `maxAgents` is a hard cap for that host (default: `capacity.maxAgents`); the real room is measured each time.
+`use` values: `exec`, `worker`, `session`. Only `worker` hosts take hires. `maxAgents` is a hard cap for that host (default: `capacity.maxAgents`); the real room is measured each time. Run `add` again after you change the CLI on that machine; it keeps your other settings.
 
-8. Check it: `.team/tools/resource-lease.py status` on the main machine prints a line for every host. `unreachable` means SSH failed.
+9. Check it: `.team/tools/resource-lease.py status` on the main machine prints a line for every host, with its CLI. `unreachable` means SSH failed.
 
 ## Choose how to use it
 
@@ -49,17 +52,26 @@ The code must be on that machine: push the feature branch first.
 ### Headless worker: one task, then it exits
 
 ```bash
-.team/tools/resource-lease.py reserve developer-3 developer      # HIRE developer-3 on pc2 ... (or WAIT)
-scp brief.md pc2:brief.md
-ssh pc2 'cd ~/workspace && TEAM_ROLE=developer timeout 280 ~/.local/bin/claude -p "$(cat ~/brief.md)" --model sonnet --max-turns 40 --max-budget-usd 2 --permission-mode acceptEdits --output-format json --allowedTools "Bash(git switch:*)" "Bash(git add:*)" "Bash(git commit:*)" "Bash(date:*)" "<test command rule>"'; .team/tools/resource-lease.py release developer-3
+.team/tools/resource-lease.py reserve developer-3 developer [--cli codex]   # HIRE developer-3 on pc2 cli=codex ... (or WAIT)
+scp brief.md pc2:workspace/brief-developer-3.md
+ssh pc2 'cd ~/workspace && .team/tools/worker-run.sh developer brief-developer-3.md'; .team/tools/resource-lease.py release developer-3
 ```
 
 - Reserve first and release after, in the same command, so a failed run still gives the room back. A lease left behind expires on its own.
-- `TEAM_ROLE` makes that machine's hooks treat the run as a team agent: it may push its feature branch, never main, tags or with force, and must write its log and journal entries.
+- `worker-run.sh` reads `worker` in that machine's `team/team.local.json` (`cli`, `model`, `maxTurns`, `maxBudgetUsd`, `timeoutMin`, `allowedTools`, or `cmd`), puts `templates/worker-rules.md` in front of the brief, and runs the CLI under `timeout`. Exit 124 means the time ran out.
+- It sets `TEAM_ROLE`, so a Claude Code worker's hooks treat the run as a team agent: it may push its feature branch, never main, tags or with force, and must write its log and journal entries.
 
-- Use the full path: `~/.local/bin` is not on `PATH` in a plain `ssh host 'command'`.
-- Always set a budget, and use `timeout` as well.
-- Headless cannot ask for approval. List what it may run in `--allowedTools`, and keep it tight. Never skip permissions.
+| CLI | Command it runs | Limits |
+|---|---|---|
+| `claude` | `claude -p … --max-turns --max-budget-usd --permission-mode acceptEdits --allowedTools …` | Turns, budget, tool list, team hooks, timeout |
+| `codex` | `codex exec --sandbox workspace-write [-m model] …` | Sandbox (writes only in the workspace; no network by default, so it cannot push), timeout |
+| `cursor` | `cursor-agent -p --output-format text [--model model] …` | Cursor's own permission file in that workspace, timeout |
+| other | `worker.cmd`, with `{brief}` as the prompt file path | Only what that CLI enforces, and the timeout |
+
+- Only Claude Code runs the team hooks. On other CLIs, the rules in the brief, branch protection, a git token that can push only feature branches, and the lead's review are the gates.
+- The code goes to the provider of that machine's CLI. Use only providers the owner allows for that repo.
+- Each account has its own quota. A budget cap exists only on Claude Code: keep `timeoutMin` short on the others.
+- Headless cannot ask for approval. List what it may run in `allowedTools`, and keep it tight. Never skip permissions.
 - `Bash(x:*)` matches `x` followed by a space. `Bash(git fetch host:*)` does not match `git fetch host:repo`: write the full command as the rule.
 - A rule matches the command as typed: `Bash(~/run.sh:*)` and `Bash(/home/ubuntu/run.sh:*)` are different rules. Tell the worker the exact form to use.
 - A headless worker ignores `.claude/settings.json` until the workspace is trusted, so pass permissions on the command line.
@@ -73,7 +85,7 @@ A lead on one machine can start a worker on another with the same two commands, 
 
 ### Remote session: a role that keeps context
 
-Start Claude Code with Remote Control on that machine, in `tmux`, on the same account. It then appears in `ListAgents` and takes `SendMessage`. Another account cannot join this way: use a headless worker or a department.
+Start Claude Code with Remote Control on that machine, in `tmux`, on the same account (Claude Code only). It then appears in `ListAgents` and takes `SendMessage`. Another account cannot join this way: use a headless worker or a department.
 
 ## Team rules on several machines
 
@@ -107,3 +119,5 @@ An instance named `primary` mounts your whole home folder read-write at `~/Home`
 ## Check before relying on it
 
 Run one small task end to end: brief, remote run, branch, lead review, log entry. Only then add more.
+
+`worker-run.sh` and `host-join.sh` are tested with stub CLIs only. A real `codex` or `cursor-agent` run is not tested: check its flags on the first run.

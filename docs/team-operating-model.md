@@ -306,8 +306,9 @@ Team files never go into service repositories.
 
 - **Remote execution:** agents stay; heavy commands run through SSH or `DOCKER_HOST=ssh://`.
 - **Remote session:** Claude Code with Remote Control on the same account joins through `SendMessage`.
-- **Headless worker:** `ssh host 'claude -p "<brief>"'`, one task then exit. It needs its own login and a tight allow list.
+- **Headless worker:** `ssh host '.team/tools/worker-run.sh <role> <brief file>'`, one task then exit. It needs its own login and a tight allow list.
 - Hosts are listed in `team.local.json`, each with `maxAgents`. `resource-lease.py` reads every host's capacity over SSH and places each hire; leases are kept on the main machine, because only the PO hires. `flock` is per machine. Work moves by git.
+- A machine joins with `host-join.sh`. Each machine may use its own account and agent CLI (`cli`: claude, codex, cursor). `worker-run.sh` runs a brief there with the rules in front. Only Claude Code runs the team hooks: keep leads on Claude Code, and send other CLIs member work only.
 - The main machine stays light: the PO, the board, tickets, git. Heavy work goes to other hosts. A large area can have its lead on another host, starting its own workers there, so only its result reaches the PO.
 
 How to set it up: `.team/docs/multi-server.md`.

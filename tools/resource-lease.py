@@ -2,8 +2,8 @@
 """Place and reserve agents across machines. Costs no tokens.
 
   resource-lease.py status                      one line per host: status, leases, free slots; then PICK <host>|none
-  resource-lease.py reserve AGENT ROLE [--heavy] [--host H] [--minutes M] [--owner-ok]
-                                                HIRE AGENT on HOST (a lease is written), or WAIT <reason> (exit 4)
+  resource-lease.py reserve AGENT ROLE [--heavy] [--host H] [--cli C] [--minutes M] [--owner-ok]
+                                                HIRE AGENT on HOST with CLI (a lease is written), or WAIT <reason> (exit 4)
   resource-lease.py release AGENT | --id AGENT_ID   give the reservation back and learn the agent's real peak
   resource-lease.py bind ROLE AGENT_ID           tie the newest unbound lease of ROLE on main to a started subagent
   resource-lease.py list                         active leases
@@ -12,6 +12,7 @@ Hosts: "main" (this machine) and every team.local.json host whose "use" has "wor
 capacity-check.sh --json (over ssh for other hosts). A host fits a hire when, after the unused part of
 its leases and its minAvailGb reserve, it has the estimated peak memory and load free, has fewer than
 maxAgents leases, and is GREEN (YELLOW only with --owner-ok, which the owner gives for one task).
+--cli keeps only hosts whose agent CLI matches (host "cli", default claude; main is always claude).
 The team ceiling (team.config.json) caps active leases across all hosts.
 The estimate is the 90th percentile of past peaks for the role (and --heavy), else the defaults.
 Only the PO reserves; leases live on the main machine in team/.capacity/ (ignored by git).
@@ -35,8 +36,8 @@ def load(path, default):
 def settings():
     local = load('team/team.local.json', {})
     cap = DEFAULTS | local.get('capacity', {})
-    hosts = [{'name': 'main', 'maxAgents': cap['maxAgents']}]
-    hosts += [h | {'maxAgents': h.get('maxAgents', cap['maxAgents'])} for h in local.get('hosts', []) if 'worker' in h.get('use', [])]
+    hosts = [{'name': 'main', 'cli': 'claude', 'maxAgents': cap['maxAgents']}]
+    hosts += [h | {'maxAgents': h.get('maxAgents', cap['maxAgents']), 'cli': h.get('cli', 'claude')} for h in local.get('hosts', []) if 'worker' in h.get('use', [])]
     return cap, hosts, load('team/team.config.json', {}).get('ceiling', 2)
 
 
@@ -131,7 +132,7 @@ def status(a):
             continue
         fgb, fload, n = free(h, m, active, cap)
         slots = max(0, min(math.floor(fgb / gb), math.floor(fload / load_), h['maxAgents'] - n))
-        print(f"{time.strftime('%H:%M')} {m['status']} {h['name']} leases={n}/{h['maxAgents']} slots={slots} "
+        print(f"{time.strftime('%H:%M')} {m['status']} {h['name']} cli={h['cli']} leases={n}/{h['maxAgents']} slots={slots} "
               f"freeG={fgb:.1f} freeLoad={fload:.1f} perAgent={gb:.1f}G/{load_:.1f}")
     pick = None if len(active) >= ceiling else choose(hosts, seen, active, cap, gb, load_, False, False)
     print(f"TEAM leases={len(active)}/{ceiling} PICK {pick or 'none'}")
@@ -140,7 +141,12 @@ def status(a):
 def reserve(a):
     cap, hosts, ceiling = settings()
     if a.host:
-        hosts = [h for h in hosts if h['name'] == a.host] or sys.exit(f'WAIT unknown host {a.host}')
+        hosts = [h for h in hosts if h['name'] == a.host]
+    if a.cli:
+        hosts = [h for h in hosts if h['cli'] == a.cli]
+    if not hosts:
+        print(f'WAIT no host matches --host {a.host or "any"} --cli {a.cli or "any"}')
+        sys.exit(4)
     active = leases()
     if any(l['agent'] == a.agent for l in active):
         sys.exit(f'{a.agent} already holds a lease: release it first')
@@ -158,7 +164,8 @@ def reserve(a):
              'start': now, 'expires': now + a.minutes * 60, 'startUsed': m['usedGb'], 'startLoad': m['load5'], 'agentId': ''}
     LEASES.mkdir(parents=True, exist_ok=True)
     (LEASES / f'{a.agent}.json').write_text(json.dumps(lease))
-    print(f"HIRE {a.agent} on {host} (reserved {gb:.1f}G, load {load_:.1f}, expires {time.strftime('%H:%M', time.localtime(lease['expires']))})")
+    cli = next(h['cli'] for h in hosts if h['name'] == host)
+    print(f"HIRE {a.agent} on {host} cli={cli} (reserved {gb:.1f}G, load {load_:.1f}, expires {time.strftime('%H:%M', time.localtime(lease['expires']))})")
 
 
 def release(a):
@@ -207,7 +214,8 @@ def main():
     r = sub.add_parser('reserve')
     r.add_argument('agent'), r.add_argument('role')
     r.add_argument('--heavy', action='store_true'), r.add_argument('--owner-ok', action='store_true')
-    r.add_argument('--host', default=''), r.add_argument('--minutes', type=int, default=90)
+    r.add_argument('--host', default=''), r.add_argument('--cli', default='')
+    r.add_argument('--minutes', type=int, default=90)
     rel = sub.add_parser('release')
     rel.add_argument('agent', nargs='?', default=''), rel.add_argument('--id', default='')
     b = sub.add_parser('bind')
