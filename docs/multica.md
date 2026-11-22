@@ -92,6 +92,18 @@ Use the long-lived token in PO containers. Multica can also hold a credential as
 - **A pool shared by two workspaces:** each PO keeps its own leases, so it does not see the other's hires. Set `maxAgents` low on that host, or give each workspace its own pool.
 - **PO to PO:** one PO can ask another by mention on an issue. Use it for work between workspaces, not for capacity: each mention is a paid run, and two agents that answer each other do not stop on their own. Write the stop rule in the instructions.
 
+## Leads as agents (pilot)
+
+The PO stays the only Multica agent by default. A second shape puts the long-lived core roles on the board too:
+
+- Each lead (and the Architect) is a Multica agent on the workspace's runtime, one run at a time, with `TEAM_ROLE=<role>` in its environment so the guard hook applies to it.
+- A squad has the PO as leader and the leads as members. Assign an issue to the squad: the PO delegates by mention and stops; the lead's reply wakes the PO.
+- A lead hires its own members inside its run, after `resource-lease.py reserve`. Members never become Multica agents: they are short-lived, and they are what the capacity rules must count.
+- Cost: every reply of a lead starts a new PO run. Lead runs hold no lease; "one run at a time" per agent is their limit. With the workspace folder in direct mode, only one agent of the workspace works at a time.
+- The owner still asks the PO, not a lead, so priorities stay in one place.
+
+Tried once: an issue assigned to the squad, delegated by the PO, answered by the lead, closed by the PO. No real work yet.
+
 ## Infrastructure: one DevOps agent
 
 Only one agent may change a shared machine or cluster (see `devopsPermissions` in `team.config.json`). With Multica:
