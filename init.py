@@ -76,7 +76,10 @@ def main():
     cfg.setdefault('maxRounds', example.get('maxRounds', 3))
     cfg['models'] = {**example['models'], **cfg['models']}  # a role added to the template gets its default model
     # The template release this workspace runs: a tag, or tag-commits-hash between releases.
-    version = subprocess.run(['git', '-C', str(TPL), 'describe', '--tags', '--always'], capture_output=True, text=True).stdout.strip()
+    def git_tpl(*args):
+        return subprocess.run(['git', '-C', str(TPL), *args], capture_output=True, text=True).stdout.strip()
+    # Only when .team is its own clone: otherwise git would describe the workspace repository.
+    version = git_tpl('describe', '--tags', '--always') if git_tpl('rev-parse', '--show-toplevel') == str(TPL) else ''
     cfg['templateVersion'] = version or cfg.get('templateVersion', 'unknown')
     cap = {**detect_capacity(), **local.get('capacity', {})}
     for key in cap:
@@ -156,8 +159,7 @@ def main():
     perms = data.setdefault('permissions', {})
     allow, deny = perms.setdefault('allow', []), perms.setdefault('deny', [])
     allow.extend(r for r in [f'Bash(.team/tools/{t})' for t in ('capacity-check.sh', 'journal-archive.sh:*', 'ticket.py:*',
-                 'scheduled-check.sh', 'gitlab-pipelines.py:*', 'resource-lease.py:*', 'heavy.sh:*',
-                 'template-version.sh')] if r not in allow)
+                 'scheduled-check.sh', 'gitlab-pipelines.py:*', 'resource-lease.py:*', 'template-version.sh')] if r not in allow)
     # Enforced by the harness, not only written in the rules (team operating model §7):
     deny.extend(r for r in ['Read(~/.config/agent-team/**)',  # the owner's GitLab token: tools use it, agents never read it
                             'Read(~/.ssh/**)', 'Read(**/.env)', 'Read(**/.env.*)', 'Read(**/*.pem)', 'Read(**/*.key)',

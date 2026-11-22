@@ -11,10 +11,11 @@ SLOTS=$(python3 - "${TEAM_LOCAL:-team/team.local.json}" <<'PY'
 import json, sys
 try:
     print(max(1, int(json.load(open(sys.argv[1])).get('capacity', {}).get('heavySlots', 1))))
-except (OSError, ValueError):
+except Exception:  # no file, bad JSON, or a value that is not a number: one slot
     print(1)
 PY
 )
+case "$SLOTS" in ''|*[!0-9]*) SLOTS=1 ;; esac
 DIR="${TEAM_LOCK_DIR:-/tmp/team-heavy-$(id -u)}"
 mkdir -p "$DIR"
 while true; do
@@ -24,8 +25,14 @@ while true; do
     fi
     exec 9>"$DIR/slot-$i.lock"
     if flock -n 9; then
-      "$@" 9>&-   # the command does not inherit the lock: a process it leaves behind cannot hold the slot
-      exit $?
+      # The command does not inherit the lock: a process it leaves behind cannot hold the slot.
+      "$@" 9>&- <&0 &
+      pid=$!
+      # A signal to this wrapper goes on to the command, and the slot stays taken until the command has ended.
+      trap 'kill -TERM "$pid" 2>/dev/null' TERM INT HUP
+      wait "$pid"; rc=$?
+      while kill -0 "$pid" 2>/dev/null; do wait "$pid"; rc=$?; done
+      exit "$rc"
     fi
     exec 9>&-
   done
