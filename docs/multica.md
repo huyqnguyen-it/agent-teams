@@ -38,6 +38,8 @@ Do not use it for one workspace on one machine. The team works without it.
 The owner does every step that handles a credential.
 
 1. **Server.** Run Multica's `docker-compose.selfhost.yml` with a random `JWT_SECRET`. Set `DO_NOT_TRACK=1` to send no telemetry. Check that the port answers as Multica: `curl http://127.0.0.1:<port>/healthz` must return `{"status":"ok",...}`. Another service on the same port can answer first and give confusing login errors.
+   - **Login codes.** Multica signs a user in with a code sent by email. With no mail server set (`RESEND_API_KEY` or `SMTP_HOST` in `.env`), the code is printed in the backend log, for the first user and for every member added later: `docker logs --since 10m multica-backend-1 2>&1 | grep "Verification code"`. Whoever reads that log can sign in as any user, so set a mail server before other people join.
+   - **Sign-up.** It is open by default. After the accounts exist, set `ALLOW_SIGNUP=false` (or `ALLOWED_EMAILS`) in `.env` and recreate the backend.
 2. **A container per workspace.** Install the agent CLI, `git`, Python 3 and the `multica` CLI. Run agents as a non-root user. Give the container a hard memory limit, so `free` inside shows the limit. Let it reach the Multica API, and nothing else it does not need.
 3. **Credentials, in the container** (see the table below): the agent CLI's login, a Multica personal access token, and a git key for this workspace's repositories only.
 4. **The workspace.** Clone it in the container, with submodules. If the workspace cannot be cloned (unpushed work, nested repositories), mount the folder instead; then the owner's own sessions and the container share one checkout, so do not run both on one repository at once.
