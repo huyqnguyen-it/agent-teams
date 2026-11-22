@@ -41,7 +41,7 @@ The owner does every step that handles a credential.
    - **Login codes.** Multica signs a user in with a code sent by email. With no mail server set (`RESEND_API_KEY` or `SMTP_HOST` in `.env`), the code is printed in the backend log, for the first user and for every member added later: `docker logs --since 10m multica-backend-1 2>&1 | grep "Verification code"`. Whoever reads that log can sign in as any user, so set a mail server before other people join.
    - **Sign-up.** It is open by default. After the accounts exist, set `ALLOW_SIGNUP=false` (or `ALLOWED_EMAILS`) in `.env` and recreate the backend.
 2. **A container per workspace.** Install the agent CLI, `git`, Python 3 and the `multica` CLI. Run agents as a non-root user. Give the container a hard memory limit, so `free` inside shows the limit. Let it reach the Multica API, and nothing else it does not need.
-3. **Credentials, in the container** (see the table below): the agent CLI's login, a Multica personal access token, and a git key for this workspace's repositories only.
+3. **Credentials, in the container** (see the table below): the agent CLI's login, a Multica personal access token, a git key for this workspace's repositories only, and a GitLab API token if the team reads CI results.
 4. **The workspace.** Clone it in the container, with submodules. If the workspace cannot be cloned (unpushed work, nested repositories), mount the folder instead; then the owner's own sessions and the container share one checkout, so do not run both on one repository at once.
 5. **The team.** In the workspace: clone this template to `.team/` and run `.team/init.sh --yes`. Limits in `team/team.local.json` then fit the container.
 6. **The daemon.** `multica login --token`, then run `multica daemon start --foreground --no-auto-update` as a service that restarts.
@@ -69,6 +69,7 @@ Read team/roles/product-owner/handover.md and team/status/board.md first.
 | Agent CLI login | Each container or machine | Each may use a different account; each account has its own quota |
 | Multica personal access token | Each container, in `~/.multica` after login | It acts as your account in every Multica workspace. Never copy a container after `multica login`: two daemons would share one identity |
 | Git key | Each container | One key per container, with access to that workspace only, so one can be revoked alone |
+| GitLab API token | Each container, in `~/.config/agent-team/gitlab.env` | The git key carries git only: CI results need this token. One per container, for that workspace's GitLab server, scope `read_api` only. The owner runs `.team/tools/gitlab-setup.sh` in the container; check with `gitlab-pipelines.py whoami` |
 | Cluster access | The DevOps container only | See below |
 
 Claude Code has two kinds of login:
@@ -78,6 +79,8 @@ Claude Code has two kinds of login:
 | Headless runs, which is how Multica starts the PO | Yes | Yes |
 | Remote Control, claude.ai connectors, Artifact tools | No | Yes |
 | Set up with no browser on that machine | Yes | No |
+
+An old GitLab has no `read_api` scope: its API accepts only the `api` scope, which can also write. There, create the token for a separate user with the Reporter role on the projects, so the token can read pipelines and nothing more.
 
 Use the long-lived token in PO containers. Multica can also hold a credential as an agent environment variable, but it stores the value as plain text in its database: keep high-value tokens in the container.
 
