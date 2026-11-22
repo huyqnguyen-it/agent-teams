@@ -112,11 +112,12 @@ The PO stays the only Multica agent by default. A second shape puts the long-liv
 
 - Each lead (and the Architect) is a Multica agent on the workspace's runtime, one run at a time, with `TEAM_ROLE=<role>` in its environment so the guard hook applies to it.
 - A squad has the PO as leader and the leads as members. Assign an issue to the squad: the PO delegates by mention and stops; the lead's reply wakes the PO.
-- A lead hires its own members inside its run, after `resource-lease.py reserve`. Members never become Multica agents: they are short-lived, and they are what the capacity rules must count.
-- Cost: every reply of a lead starts a new PO run. Lead runs hold no lease; "one run at a time" per agent is their limit. With the workspace folder in direct mode, only one agent of the workspace works at a time.
+- Staffing stays with the PO and the Resource Manager. A lead that needs a member posts `STAFF? <role> <task>` with a mention of the PO and stops. The PO asks the Resource Manager, reserves the room (`resource-lease.py reserve`) and answers `HIRE`, `REUSE` or `WAIT`; only then does the lead start that member in its own run. Members never become Multica agents: they are short-lived, and they are what the capacity rules must count.
+- Set each lead agent's model to the one in `team.config.json`; an agent with no model set runs on the CLI's default, which can be the most expensive one.
+- Cost: every reply of a lead, and every `STAFF?`, starts a new PO run that loads its context again. In the one measured task this was about a fifth on top of the lead's own work. Use it for plans that run long; small tasks the PO does itself. Lead runs hold no lease; "one run at a time" per agent is their limit. With the workspace folder in direct mode, only one agent of the workspace works at a time.
 - The owner still asks the PO, not a lead, so priorities stay in one place.
 
-Tried once: an issue assigned to the squad, delegated by the PO, answered by the lead, closed by the PO. No real work yet.
+Tried: a setup check, and one real planning task (PO accepts the ticket and delegates, the lead writes the plan, the PO checks it). Not tried: a `STAFF?` round with a hire.
 
 ## Infrastructure: one DevOps agent
 
