@@ -84,6 +84,20 @@ Claude Code has two kinds of login:
 
 Use the long-lived token in PO containers. Multica can also hold a credential as an agent environment variable, but it stores the value as plain text in its database: keep high-value tokens in the container.
 
+## Optional: a model router
+
+By default each container holds its own agent login (the long-lived token above). That is the simple setup, and it is enough for one account.
+
+Add a router only when one account's limit stops the team, or when roles must use different providers (several accounts, a cheaper provider, a model server of your own). A router such as 9router holds the accounts and gives every container one address and one key:
+
+- In each container set `ANTHROPIC_BASE_URL` to the router and `ANTHROPIC_AUTH_TOKEN` to a router key, and remove the agent login. The other credentials (Multica, git, CI) stay.
+- Give each container its own router key, so usage is visible per container and one key can be revoked alone.
+- Keep the core roles (PO, leads, Architect) on one model family. Let only members fall back to a weaker model: set the fallback as `worker.model` of the worker host in `team.local.json`.
+- The router is one more service every agent depends on, and it holds all the accounts: keep it off the open network, and keep the direct login as a way back.
+- Check the terms of each account before you share it through a router.
+
+Tried once: three containers through 9router with two accounts. A real switch at a limit was not observed.
+
 ## Many servers
 
 - **Access from the LAN.** The server listens on localhost only. For other machines, put a proxy on the LAN address in front of it: WebSocket paths (`/ws`, `/collab`) go to the backend, the rest to the web app. Set `FRONTEND_ORIGIN` and `CORS_ALLOWED_ORIGINS` in `.env` to the address people open, or the backend refuses them. Without the proxy the pages load but live updates do not arrive.
