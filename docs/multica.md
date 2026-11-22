@@ -102,7 +102,8 @@ Only one agent may change a shared machine or cluster (see `devopsPermissions` i
 
 ## Limits and what is untested
 
-- Tried once, on one machine: Multica 0.11.1, two workspaces in LXC containers, a setup-check issue answered by each PO agent.
+- Tried once, on one machine: Multica 0.11.1, two workspaces in LXC containers, a setup-check issue answered by each PO agent, and one hire of a member inside a PO run.
 - Not run: real work through a PO run; a hire from a PO container to a pool; a PO asking the DevOps agent; a restart of the machine; a daemon on a second machine.
-- Team hooks under Multica: not checked. Multica starts Claude Code in bypass mode; hooks and `deny` rules are expected to apply, but no run has proved it.
+- Team hooks under Multica: checked once. In a PO run started by Multica, a hired developer was refused `git tag` by the guard hook, and its reservation was tied to it and released when it stopped. Not checked: the stop hook refusing a stop with no log entry, and the `deny` rules.
+- The guard hook reads the whole command text: a log entry written with a shell command that quotes `git tag` or `git push` is refused too. Reword the entry, or write it with the file tool.
 - Multica is source-available, not open source. Read its licence before company use.
