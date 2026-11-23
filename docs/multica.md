@@ -98,6 +98,33 @@ Add a router only when one account's limit stops the team, or when roles must us
 
 Tried once: three containers through 9router with two accounts. A real switch at a limit was not observed.
 
+## Optional: self-hosted models
+
+Nothing in the team needs a model server of your own. Add one when you have the hardware and want the cheap roles off the paid accounts. None of this section has been run.
+
+There are two kinds of self-hosted model, and they connect in different ways:
+
+| Kind | What it does | How the team uses it |
+|---|---|---|
+| Chat model with tool use | Reads files, runs tools, like the hosted models | As the model of a role, through the router |
+| Decision model | Picks one of the options you give it, with a probability | Called by a script; it cannot be the model of an agent |
+
+**A chat model for a role.** An agent and its subagents share one address, so a single role cannot point at another server by itself. Put the session behind the router (section above) and let the router map a model name to your server:
+
+- Map the smallest name first. `team.config.json` sets `haiku` for the Resource Manager and the Tester: mapping `haiku` in the router moves both, with no change in the workspace.
+- For members on a worker host, set `worker.model` in that host's `team.local.json` instead: only that host changes.
+- Keep the PO, the leads and the Architect on the hosted models. Their mistakes spread to everything below them.
+- The model must handle tool calls reliably. Test it on a real task of that role before you map it, and keep the hosted name as the fallback in the router.
+
+**A decision model for a script.** Staffing has choices with fixed options: hire or reuse, which member, which lead gets a ticket. A small decision model can answer those in one call on a CPU. Rules for using one:
+
+- Rules come first. What `capacity-check.sh` and `resource-lease.py` already decide (for example `WAIT`) never goes to a model.
+- The script asks the decision model and takes the answer only above a confidence threshold. Below it, the question goes to the Resource Manager as before.
+- Write each option as a full description (role, skills, current task), not a name: accuracy depends on the wording.
+- Log each question, answer and confidence in the journal, so wrong picks can be found and the threshold adjusted.
+
+**Where it runs.** Run the model server on the host or on its own machine, not inside a PO container: the containers have hard memory limits sized for agents. Give the containers the address through the router, or for a decision model through a proxy device, as for the Multica API. Keep it off the open network.
+
 ## Many servers
 
 - **Access from the LAN.** The server listens on localhost only. For other machines, put a proxy on the LAN address in front of it: WebSocket paths (`/ws`, `/collab`) go to the backend, the rest to the web app. Set `FRONTEND_ORIGIN` and `CORS_ALLOWED_ORIGINS` in `.env` to the address people open, or the backend refuses them. Without the proxy the pages load but live updates do not arrive.

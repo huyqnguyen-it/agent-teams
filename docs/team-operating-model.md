@@ -310,7 +310,7 @@ A skill is a short how-to proven on real work, written with `.team/templates/ski
 
 ## 12. Models
 
-Defaults are in `team.config.json`. Architect: the strongest model, because its mistakes spread. Resource Manager and Tester: the smallest. Others: mid.
+Defaults are in `team.config.json`. Architect: the strongest model, because its mistakes spread. Resource Manager and Tester: the smallest. Others: mid. To serve the smallest roles from a model server of your own, see [self-hosted models](multica.md#optional-self-hosted-models).
 
 ## 13. Git
 
